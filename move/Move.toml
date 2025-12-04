@@ -1,0 +1,11 @@
+[package]
+name = "suilog"
+version = "0.0.1"
+edition = "2024.beta"
+published-at = ""
+
+[dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
+
+[addresses]
+suilog = "0x0"
