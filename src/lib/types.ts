@@ -48,6 +48,23 @@ export interface ContributionDetail {
   contributionScore: number;
 }
 
+export interface GanttChart {
+  id: string;
+  title: string;
+  startDate: number;
+  dueDate: number;
+  progress: number;
+  status: TaskStatus;
+  priority: Priority;
+}
+
+export interface GanttChartData {
+  tasks: GanttChart[];
+  minDate: number;
+  maxDate: number;
+}
+
+
 // export interface TaskContribution {
 //     taskId: string;
 //     taskTitle: string;

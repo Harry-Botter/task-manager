@@ -12,6 +12,7 @@ import CompleteTaskModal from './components/CompleteTaskModal';
 import { Task, Project, TaskStatus } from './lib/types';
 import { storage } from './lib/storage';
 import TaskTable from './components/TaskTable';
+import GanttCharrt from './components/GanttChart';
 
 type FilterType = 'all' | 'today' | 'pending' | 'in-progress' | 'completed';
 
@@ -190,6 +191,8 @@ function App() {
           <div style={{ marginBottom: '1.5rem' }}>
             <WeeklyChart tasks={tasks} />
           </div>
+
+          <GanttCharrt tasks={tasks} />
 
           <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             {(['all', 'today', 'pending', 'in-progress', 'completed'] as FilterType[]).map((f) => (
