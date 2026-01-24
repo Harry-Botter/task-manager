@@ -13,6 +13,7 @@ import { Task, Project, TaskStatus } from './lib/types';
 import { storage } from './lib/storage';
 import TaskTable from './components/TaskTable';
 import GanttCharrt from './components/GanttChart';
+import { TaskFilterBar } from './components/TaskFilterBar';
 
 type FilterType = 'all' | 'today' | 'pending' | 'in-progress' | 'completed';
 

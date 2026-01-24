@@ -32,23 +32,23 @@ Suilog（タスク管理 & Web3貢献度トラッカー）に、複数人での�
 **目標**: 単一ブラウザ環境で複数ウォレットをシミュレート
 
 #### 1-1. データモデル拡張
-- [ ] `Task` 型に `assignedTo: string | null` フィールド追加
-- [ ] `Project` 型に `members: string[]` フィールド追加
-- [ ] `assignedTo` のスキーマ移行（既存タスクにnull設定）
+- [-] `Task` 型に `assignedTo: string | null` フィールド追加
+- [-] `Project` 型に `members: string[]` フィールド追加
+- [-] `assignedTo` のスキーマ移行（既存タスクにnull設定）
 
 #### 1-2. コンポーネント新規実装
 
-**MemberSelector.tsx**
-- [ ] ドロップダウンコンポーネント
-- [ ] 短縮アドレス表示（0x1234...5678）
-- [ ] Unassigned オプション
-- [ ] onChange コールバック
+**MemberSelector.tsx** 👈今ここ！！
+- [-] ドロップダウンコンポーネント
+- [-] 短縮アドレス表示（0x1234...5678）
+- [-] Unassigned オプション
+- [-] onChange コールバック
 
 **TaskFilterBar.tsx**
-- [ ] タブベースのフィルターUI
-- [ ] フィルター種類: All Tasks / My Tasks / Unassigned / By Member
-- [ ] 各フィルターのタスク数表示
-- [ ] 現在のフィルターのハイライト
+- [-] タブベースのフィルターUI
+- [-] フィルター種類: All Tasks / My Tasks / Unassigned / By Member
+- [-] 各フィルターのタスク数表示
+- [-] 現在のフィルターのハイライト
 
 **MemberList.tsx**（Sidebar内に統合）
 - [ ] メンバー一覧表示
