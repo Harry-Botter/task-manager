@@ -27,6 +27,9 @@ export interface Task {
   status: TaskStatus;
   createdAt: number;
   completedAt?: number;
+  
+  // Phase 1: マルチユーザー対応
+  assignedTo?: string | null; // 担当者のウォレットアドレス（nullの場合はUnassigned）
 }
 
 export interface Project {
@@ -38,6 +41,9 @@ export interface Project {
   status: 'active' | 'completed';
   nftMinted?: boolean;
   nftObjectId?: string;
+  
+  // Phase 1: マルチユーザー対応
+  members?: string[]; // メンバーのウォレットアドレス配列
 }
 
 export interface ContributionDetail {
