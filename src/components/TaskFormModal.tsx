@@ -2,11 +2,22 @@ import TaskForm from './TaskForm';
 import { Task } from '../lib/types';
 
 interface TaskFormModalProps {
-  onAddTask: (task: Task) => void;
-  onClose: () => void;
+  onAddTask?: (task: Task) => void;
+  onEditTask?: (task: Task) => void;
+  onClose?: () => void;
+  editingTask?: Task;
+  members?: string[]; // Phase 1: メンバーリスト追加
+  currentUserAddress?: string; // Phase 1: 現在のウォレットアドレス追加
 }
 
-export default function TaskFormModal({ onAddTask, onClose }: TaskFormModalProps) {
+export default function TaskFormModal({ 
+  onAddTask, 
+  onEditTask, 
+  onClose, 
+  editingTask,
+  members = [],
+  currentUserAddress,
+}: TaskFormModalProps) {
   return (
     <div
       style={{
@@ -20,6 +31,8 @@ export default function TaskFormModal({ onAddTask, onClose }: TaskFormModalProps
         padding: '1rem',
       }}
       onClick={onClose}
+      role='dialog'
+      aria-modal='true'
     >
       <div
         style={{
@@ -32,7 +45,14 @@ export default function TaskFormModal({ onAddTask, onClose }: TaskFormModalProps
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <TaskForm onAddTask={onAddTask} onCancel={onClose} />
+        <TaskForm 
+          onAddTask={onAddTask} 
+          onEditTask={onEditTask}
+          onCancel={onClose}
+          editingTask={editingTask}
+          members={members}
+          currentUserAddress={currentUserAddress}
+        />
       </div>
     </div>
   );

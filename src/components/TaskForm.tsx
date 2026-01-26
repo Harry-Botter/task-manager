@@ -2,15 +2,25 @@ import { useState, useEffect } from 'react';
 import { Task, Priority } from '../lib/types';
 import { v4 as uuidv4 } from 'uuid';
 import { calculateDurationMinutes } from '../lib/recurringTasks';
+import MemberSelector from './MemberSelector';
 
 interface TaskFormProps {
   onAddTask?: (task: Task) => void;
   onEditTask?: (task: Task) => void;
   onCancel?: () => void;
   editingTask?: Task;
+  members?: string[]; // Phase 1: メンバーリスト
+  currentUserAddress?: string; // Phase 1: 現在のウォレットアドレス
 }
 
-export default function TaskForm({ onAddTask, onEditTask, onCancel, editingTask }: TaskFormProps) {
+export default function TaskForm({ 
+  onAddTask, 
+  onEditTask, 
+  onCancel, 
+  editingTask,
+  members = [],
+  currentUserAddress,
+}: TaskFormProps) {
   const isEditMode = !!editingTask;
   
   const [title, setTitle] = useState('');
@@ -32,6 +42,9 @@ export default function TaskForm({ onAddTask, onEditTask, onCancel, editingTask 
     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   );
 
+  // Phase 1: 担当者フィールド追加
+  const [assignedTo, setAssignedTo] = useState<string | null>(null);
+
   useEffect(() => {
     if (editingTask) {
       setTitle(editingTask.title);
@@ -45,8 +58,15 @@ export default function TaskForm({ onAddTask, onEditTask, onCancel, editingTask 
         setRecurringEndDate(new Date(editingTask.recurringEndDate).toISOString().split('T')[0]);
       }
       setDueDate(new Date(editingTask.dueDate).toISOString().split('T')[0]);
+      // Phase 1: 既存タスクから担当者を読み込む
+      setAssignedTo(editingTask.assignedTo ?? null);
+    } else {
+      // 新規作成時は現在のユーザーをデフォルト割り当て
+      if (currentUserAddress) {
+        setAssignedTo(currentUserAddress);
+      }
     }
-  }, [editingTask]);
+  }, [editingTask, currentUserAddress]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,6 +91,8 @@ export default function TaskForm({ onAddTask, onEditTask, onCancel, editingTask 
         recurringEndDate: isRecurring ? new Date(recurringEndDate).getTime() : undefined,
         recurringDayOfWeek: isRecurring ? dayOfWeek : undefined,
         dueDate: new Date(dueDate).getTime(),
+        // Phase 1: 担当者情報を保存
+        assignedTo,
       };
       
       onEditTask?.(updatedTask);
@@ -92,6 +114,8 @@ export default function TaskForm({ onAddTask, onEditTask, onCancel, editingTask 
         dueDate: new Date(dueDate).getTime(),
         status: 'pending',
         createdAt: Date.now(),
+        // Phase 1: 担当者情報を設定
+        assignedTo,
       };
       
       onAddTask?.(newTask);
@@ -163,7 +187,7 @@ export default function TaskForm({ onAddTask, onEditTask, onCancel, editingTask 
             />
           </div>
 
-          <div>
+          <div style={{ marginBottom: '1rem' }}>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Priority Level
             </label>
@@ -195,6 +219,20 @@ export default function TaskForm({ onAddTask, onEditTask, onCancel, editingTask 
               })}
             </div>
           </div>
+
+          {/* Phase 1: 担当者選択 */}
+          {members.length > 0 && (
+            <div style={{ marginTop: '1rem' }}>
+              <MemberSelector
+                members={members}
+                value={assignedTo}
+                onChange={setAssignedTo}
+                allowUnassigned={true}
+                label="👤 Assign To"
+                disabled={false}
+              />
+            </div>
+          )}
         </section>
 
         {/* スケジュールセクション */}

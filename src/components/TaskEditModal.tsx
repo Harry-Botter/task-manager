@@ -5,10 +5,26 @@ interface TaskEditModalProps {
   task: Task;
   onEditTask: (task: Task) => void;
   onClose: () => void;
+  members?: string[]; // Phase 1: メンバーリスト
 }
 
-export default function TaskEditModal({ task, onEditTask, onClose }: TaskEditModalProps) {
+export default function TaskEditModal({ 
+  task, 
+  onEditTask, 
+  onClose,
+  members = [],
+}: TaskEditModalProps) {
   const handleEdit = (updatedTask: Task) => {
+    // Phase 1: 担当者が変更されたか判定
+    const assignedToChanged = task.assignedTo !== updatedTask.assignedTo;
+    
+    if (assignedToChanged) {
+      // 担当者変更を検知（ここで将来的にトランザクション処理を追加可能）
+      console.log(
+        `担当者が変更されました: ${task.assignedTo ?? 'Unassigned'} → ${updatedTask.assignedTo ?? 'Unassigned'}`
+      );
+    }
+    
     onEditTask(updatedTask);
     onClose();
   };
@@ -26,6 +42,8 @@ export default function TaskEditModal({ task, onEditTask, onClose }: TaskEditMod
         padding: '1rem',
       }}
       onClick={onClose}
+      role='dialog'
+      aria-modal='true'
     >
       <div
         style={{
@@ -41,7 +59,8 @@ export default function TaskEditModal({ task, onEditTask, onClose }: TaskEditMod
         <TaskForm 
           editingTask={task} 
           onEditTask={handleEdit} 
-          onCancel={onClose} 
+          onCancel={onClose}
+          members={members}
         />
       </div>
     </div>

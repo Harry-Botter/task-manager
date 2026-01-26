@@ -38,7 +38,7 @@ Suilog（タスク管理 & Web3貢献度トラッカー）に、複数人での�
 
 #### 1-2. コンポーネント新規実装
 
-**MemberSelector.tsx** 👈今ここ！！
+**MemberSelector.tsx** 
 - [-] ドロップダウンコンポーネント
 - [-] 短縮アドレス表示（0x1234...5678）
 - [-] Unassigned オプション
@@ -50,10 +50,10 @@ Suilog（タスク管理 & Web3貢献度トラッカー）に、複数人での�
 - [-] 各フィルターのタスク数表示
 - [-] 現在のフィルターのハイライト
 
-**MemberList.tsx**（Sidebar内に統合）
-- [ ] メンバー一覧表示
-- [ ] 各メンバーのタスク数カウント
-- [ ] メンバー追加フォーム（アドレス入力）
+**MemberList.tsx**（Sidebar内に統合）👈今ここ！！
+- [-] メンバー一覧表示
+- [-] 各メンバーのタスク数カウント
+- [-] メンバー追加フォーム（アドレス入力）
 
 #### 1-3. 既存コンポーネント修正
 
@@ -411,15 +411,67 @@ const getFilteredTasks = () => {
 
 ## 📝 実装チェックリスト（Phase 1）
 
-- [ ] `Task` 型に `assignedTo: string | null` 追加
-- [ ] `Project` 型に `members: string[]` 追加
+- [-] `Task` 型に `assignedTo: string | null` 追加
+- [-] `Project` 型に `members: string[]` 追加
 - [ ] localStorage のマイグレーション処理
-- [ ] `MemberSelector.tsx` 実装
+- [-] `MemberSelector.tsx` 実装
 - [ ] `TaskFilterBar.tsx` 実装
-- [ ] `MemberList.tsx` 実装
+- [-] `MemberList.tsx` 実装
 - [ ] `TaskForm.tsx` に MemberSelector 統合
 - [ ] `TaskEditModal.tsx` で担当者変更対応
 - [ ] `TaskTable.tsx` に「Assigned To」列追加
 - [ ] `App.tsx` にフィルターロジック実装
 - [ ] ウォレット切り替え動作確認テスト
 - [ ] UI/UX レビュー
+
+## 🤖 GitHub Copilot / AI 実装ガイドライン（重要）
+
+このリポジトリでは、AI（GitHub Copilot / ChatGPT 等）を実装補助として使用する。
+以下の方針を**常に最優先**とすること。
+
+### 基本思想
+
+- **Phase 1 は「シミュレーション」**
+  - localStorage 前提
+  - マルチユーザーは「同一ブラウザ内ウォレット切り替え」で再現
+  - リアルタイム同期・分散合意は一切考慮しない
+
+- **管理コスト最小化が最重要**
+  - 自動化できることは自動化
+  - 人的オペレーションを前提にしない設計
+  - ロジックは単純・明示的・追いやすく
+
+### 実装ポリシー
+
+- 過剰な抽象化は禁止
+  - Context / Custom Hooks の乱用禁止
+  - YAGNI（You Aren’t Gonna Need It）を厳守
+
+- UIよりもデータフローを優先
+  - 見た目は最低限でよい
+  - 正しい state 更新と再レンダリングを重視
+
+- 1コンポーネント = 1責務
+  - MemberSelector は「選択UI」だけを担当
+  - ビジネスロジックは App.tsx 側に寄せる
+
+### アドレス表記ルール
+
+- UI表示は必ず短縮形
+  - `0x1234...5678`
+- フルアドレスは state / storage のみで扱う
+- 表示用ユーティリティは共通化してもよいが、
+  Phase 1 ではコンポーネント内実装も許可する
+
+### 禁止事項（Phase 1）
+
+- Supabase / API / RPC 呼び出し
+- Move コントラクト前提の実装
+- Role / Permission / Approval フロー
+- 同時編集・競合解決ロジック
+
+### AIへの期待値
+
+- 「正しく・愚直に・読みやすく」
+- 将来拡張より **今の明快さ**
+- 人間が後から読んで即理解できるコード

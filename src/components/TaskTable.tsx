@@ -9,6 +9,11 @@ interface TaskTableProps {
   onStatusChange: (taskId: string, status: TaskStatus) => void;
 }
 
+const truncateAddress = (address: string): string => {
+  if (!address || address.length < 10) return address;
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+};
+
 export default function TaskTable({ tasks, onComplete, onEdit, onDelete, onStatusChange }: TaskTableProps) {
   const priorityColors = {
     low: '#10B981',
@@ -104,6 +109,10 @@ export default function TaskTable({ tasks, onComplete, onEdit, onDelete, onStatu
             <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: '#9CA3AF', width: '100px' }}>
               Priority
             </th>
+            {/* Phase 1: 「Assigned To」列追加 */}
+            <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: '#9CA3AF', width: '120px' }}>
+              Assigned To
+            </th>
             <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: '#9CA3AF', width: '150px' }}>
               Scheduled
             </th>
@@ -190,6 +199,29 @@ export default function TaskTable({ tasks, onComplete, onEdit, onDelete, onStatu
                   >
                     {task.priority}
                   </span>
+                </td>
+
+                {/* Phase 1: Assigned To列 */}
+                <td style={{ padding: '0.75rem' }}>
+                  {task.assignedTo ? (
+                    <span
+                      style={{
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '0.375rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        color: 'white',
+                        backgroundColor: '#3B82F6',
+                      }}
+                      title={task.assignedTo}
+                    >
+                      👤 {truncateAddress(task.assignedTo)}
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>
+                      -
+                    </span>
+                  )}
                 </td>
 
                 {/* Scheduled */}

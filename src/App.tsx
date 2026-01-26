@@ -13,17 +13,43 @@ import { Task, Project, TaskStatus } from './lib/types';
 import { storage } from './lib/storage';
 import TaskTable from './components/TaskTable';
 import GanttCharrt from './components/GanttChart';
-import { TaskFilterBar } from './components/TaskFilterBar';
 
-type FilterType = 'all' | 'today' | 'pending' | 'in-progress' | 'completed';
+type FilterType = 'all' | 'today' | 'pending' | 'in-progress' | 'completed' | 'myTasks' | 'unassigned' | 'byMember';
+
+// Phase 1: テスト用メンバーアドレス
+const SAMPLE_MEMBERS = [
+  '0xd07c64dd6e6866e4386fc5708989dfe76b15c85ad755373f6c85bfb8a1c94dd0', // あなたのウォレット
+  '0x1234567890abcdef1234567890abcdef12345678',
+  '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd',
+];
 
 function App() {
-  const [project, setProject] = useState<Project>(storage.getProject());
+  const [project, setProject] = useState<Project>(() => {
+    const stored = storage.getProject();
+    
+    // Phase 1: メンバーが未設定の場合、テスト用メンバーを初期化
+    if (!stored.members || stored.members.length === 0) {
+      const initialProject: Project = {
+        ...stored,
+        members: SAMPLE_MEMBERS,
+      };
+      storage.saveProject(initialProject);
+      console.log('✅ Initialized project with SAMPLE_MEMBERS:', SAMPLE_MEMBERS);
+      return initialProject;
+    }
+    
+    return {
+      ...stored,
+      members: stored.members,
+    };
+  });
+
   const [tasks, setTasks] = useState<Task[]>([]);
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterType>('all');
+  const [selectedMemberFilter, setSelectedMemberFilter] = useState<string | null>(null);
   const account = useCurrentAccount();
   const signAndExecute = useSignAndExecuteTransaction();
 
@@ -35,10 +61,15 @@ function App() {
       scheduledStartTime: task.scheduledStartTime || '09:00',
       scheduledEndTime: task.scheduledEndTime || '13:00',
       isRecurring: task.isRecurring || false,
+      assignedTo: task.assignedTo ?? null,
     }));
 
     setTasks(migratedTasks);
     storage.saveTasks(migratedTasks);
+    
+    console.log('✅ Loaded tasks:', migratedTasks.length);
+    console.log('📋 Tasks:', migratedTasks);
+    console.log('👥 Project members:', project.members);
   }, []);
 
   const saveTasks = (newTasks: Task[]) => {
@@ -123,24 +154,34 @@ function App() {
     }
   };
 
-  const getFilteredTasks = () => {
+  /**
+   * タスクをフィルター条件に基づいて絞り込む
+   */
+  const getFilteredTasks = (): Task[] => {
     const today = new Date().setHours(0, 0, 0, 0);
     
-    switch (filter) {
-      case 'today':
-        return tasks.filter((t) => {
-          const taskScheduled = new Date(t.scheduledDate).setHours(0, 0, 0, 0);
-          return taskScheduled === today && t.status !== 'completed';
-        });
-      case 'pending':
-        return tasks.filter((t) => t.status === 'pending');
-      case 'in-progress':
-        return tasks.filter((t) => t.status === 'in-progress');
-      case 'completed':
-        return tasks.filter((t) => t.status === 'completed');
-      default:
-        return tasks;
+    let filtered = tasks;
+    
+    if (filter === 'today') {
+      filtered = tasks.filter((t) => {
+        const taskScheduled = new Date(t.scheduledDate).setHours(0, 0, 0, 0);
+        return taskScheduled === today && t.status !== 'completed';
+      });
+    } else if (filter === 'pending') {
+      filtered = tasks.filter((t) => t.status === 'pending');
+    } else if (filter === 'in-progress') {
+      filtered = tasks.filter((t) => t.status === 'in-progress');
+    } else if (filter === 'completed') {
+      filtered = tasks.filter((t) => t.status === 'completed');
+    } else if (filter === 'myTasks') {
+      filtered = tasks.filter((t) => t.assignedTo === account?.address);
+    } else if (filter === 'unassigned') {
+      filtered = tasks.filter((t) => t.assignedTo === null);
+    } else if (filter === 'byMember' && selectedMemberFilter) {
+      filtered = tasks.filter((t) => t.assignedTo === selectedMemberFilter);
     }
+    
+    return filtered;
   };
 
   const sortedTasks = [...getFilteredTasks()].sort((a, b) => {
@@ -149,10 +190,7 @@ function App() {
     return a.dueDate - b.dueDate;
   });
 
-  const completingTask = completingTaskId ? tasks.find((t) => t.id === completingTaskId) : null;
-  const editingTask = editingTaskId ? tasks.find((t) => t.id === editingTaskId) : null;
-
-  const filterCounts = {
+  const filterCounts: Record<FilterType, number> = {
     all: tasks.length,
     today: tasks.filter((t) => {
       const today = new Date().setHours(0, 0, 0, 0);
@@ -162,6 +200,23 @@ function App() {
     pending: tasks.filter((t) => t.status === 'pending').length,
     'in-progress': tasks.filter((t) => t.status === 'in-progress').length,
     completed: tasks.filter((t) => t.status === 'completed').length,
+    myTasks: tasks.filter((t) => t.assignedTo === account?.address).length,
+    unassigned: tasks.filter((t) => t.assignedTo === null).length,
+    byMember: selectedMemberFilter
+      ? tasks.filter((t) => t.assignedTo === selectedMemberFilter).length
+      : 0,
+  };
+
+  const completingTask = completingTaskId ? tasks.find((t) => t.id === completingTaskId) : null;
+  const editingTask = editingTaskId ? tasks.find((t) => t.id === editingTaskId) : null;
+
+  const handleFilterChange = (newFilter: FilterType, member?: string) => {
+    setFilter(newFilter);
+    if (member) {
+      setSelectedMemberFilter(member);
+    } else if (newFilter !== 'byMember') {
+      setSelectedMemberFilter(null);
+    }
   };
 
   return (
@@ -184,8 +239,13 @@ function App() {
           tasks={tasks}
           project={project}
           onCompleteProject={completeProject}
-          onAddTask={() => setIsAddingTask(true)}
+          onAddTask={() => {
+            console.log('🔷 Add Task clicked');
+            setIsAddingTask(true);
+          }}
           isConnected={!!account}
+          currentUserAddress={account?.address}
+          onUpdateProject={setProject}
         />
 
         <main style={{ flex: 1, padding: '1.5rem', overflowY: 'auto' }}>
@@ -199,7 +259,10 @@ function App() {
             {(['all', 'today', 'pending', 'in-progress', 'completed'] as FilterType[]).map((f) => (
               <button
                 key={f}
-                onClick={() => setFilter(f)}
+                onClick={() => {
+                  console.log('🔷 Filter changed to:', f);
+                  handleFilterChange(f);
+                }}
                 style={{
                   padding: '0.5rem 1rem',
                   borderRadius: '0.5rem',
@@ -220,16 +283,38 @@ function App() {
 
           <div>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: 'white' }}>
-              {filter === 'all' ? 'All Tasks' : filter === 'today' ? "Today's Tasks" : filter === 'in-progress' ? 'In Progress Tasks' : `${filter.charAt(0).toUpperCase() + filter.slice(1)} Tasks`}
+              {filter === 'all' && 'All Tasks'}
+              {filter === 'today' && "Today's Tasks"}
+              {filter === 'in-progress' && 'In Progress Tasks'}
+              {filter === 'pending' && 'Pending Tasks'}
+              {filter === 'completed' && 'Completed Tasks'}
+              {filter === 'myTasks' && '👤 My Tasks'}
+              {filter === 'unassigned' && '✨ Unassigned Tasks'}
+              {filter === 'byMember' && selectedMemberFilter && `Tasks for ${selectedMemberFilter.slice(0, 6)}...`}
             </h2>
             
-            <TaskTable
-              tasks={sortedTasks}
-              onComplete={handleCompleteClick}
-              onEdit={(taskId) => setEditingTaskId(taskId)}
-              onDelete={deleteTask}
-              onStatusChange={changeStatus}
-            />
+            {sortedTasks.length === 0 ? (
+              <div style={{
+                padding: '2rem',
+                textAlign: 'center',
+                color: '#9CA3AF',
+                backgroundColor: '#1F2937',
+                borderRadius: '0.5rem',
+              }}>
+                <p>📭 No tasks found</p>
+                <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                  Click "Add Task" to create your first task
+                </p>
+              </div>
+            ) : (
+              <TaskTable
+                tasks={sortedTasks}
+                onComplete={handleCompleteClick}
+                onEdit={(taskId) => setEditingTaskId(taskId)}
+                onDelete={deleteTask}
+                onStatusChange={changeStatus}
+              />
+            )}
           </div>
         </main>
       </div>
@@ -237,7 +322,12 @@ function App() {
       {isAddingTask && (
         <TaskFormModal
           onAddTask={addTask}
-          onClose={() => setIsAddingTask(false)}
+          onClose={() => {
+            console.log('🔷 TaskFormModal closed');
+            setIsAddingTask(false);
+          }}
+          members={project.members || []}
+          currentUserAddress={account?.address}
         />
       )}
 
@@ -245,7 +335,11 @@ function App() {
         <TaskEditModal
           task={editingTask}
           onEditTask={editTask}
-          onClose={() => setEditingTaskId(null)}
+          onClose={() => {
+            console.log('🔷 TaskEditModal closed');
+            setEditingTaskId(null);
+          }}
+          members={project.members || []}
         />
       )}
 
@@ -258,7 +352,6 @@ function App() {
         />
       )}
 
-      {/* デバッグ情報 */}
       <ConnectionDebugger />
     </div>
   );

@@ -2,16 +2,28 @@ import { useState, useEffect } from 'react';
 import { Task, Project } from '../lib/types';
 import { calculateContribution } from '../lib/contribution';
 import CompleteProjectButton from './CompleteProjectButton';
+import MemberList from './MemberList';
+import { storage } from '../lib/storage';
 
 interface SidebarProps {
   tasks: Task[];
   project: Project;
   onCompleteProject: () => void;
-  onAddTask: () => void; // ← 追加
+  onAddTask: () => void;
   isConnected: boolean;
+  currentUserAddress?: string;
+  onUpdateProject: (project: Project) => void;
 }
 
-export default function Sidebar({ tasks, project, onCompleteProject, onAddTask, isConnected }: SidebarProps) {
+export default function Sidebar({ 
+  tasks, 
+  project, 
+  onCompleteProject, 
+  onAddTask, 
+  isConnected, 
+  currentUserAddress, 
+  onUpdateProject 
+}: SidebarProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -46,8 +58,18 @@ export default function Sidebar({ tasks, project, onCompleteProject, onAddTask, 
     });
   };
 
+  const handleAddMember = (address: string) => {
+    const updatedProject: Project = {
+      ...project,
+      members: [...(project.members || []), address],
+    };
+    storage.saveProject(updatedProject);
+    onUpdateProject(updatedProject);  // ← onUpdateProject を使用
+  };
+
   return (
-    <div style={{ width: '20rem', backgroundColor: '#1F2937', borderRight: '1px solid #374151', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <aside style={{ width: '20rem', backgroundColor: '#1F2937', borderRight: '1px solid #374151', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100vh', overflowY: 'auto' }}>
+
       {/* 日時情報 */}
       <div style={{ backgroundColor: '#111827', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #374151' }}>
         <div style={{ fontSize: '1.875rem', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem' }}>
@@ -95,7 +117,15 @@ export default function Sidebar({ tasks, project, onCompleteProject, onAddTask, 
         </div>
       </div>
 
-      {/* Add Task ボタン - 追加 */}
+      {/* Phase 1: MemberList を追加 */}
+      <MemberList
+        members={project.members || []}
+        tasks={tasks}
+        onAddMember={handleAddMember}
+        currentUserAddress={currentUserAddress}
+      />
+
+      {/* Add Task ボタン */}
       <button
         onClick={onAddTask}
         style={{
@@ -124,6 +154,6 @@ export default function Sidebar({ tasks, project, onCompleteProject, onAddTask, 
           isConnected={isConnected}
         />
       </div>
-    </div>
+    </aside>
   );
 }
