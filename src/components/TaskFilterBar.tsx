@@ -7,6 +7,7 @@ interface TaskFilterBarProps {
     selectedMember?: string | null;
     filterCounts: Record<string, number>;
     onFilterChange: (filter: FilterType, member?: string) => void;
+    currentUserAddress?: string;
 }
 
 /* ウォレットアドレスを短縮形で表示 */
@@ -21,6 +22,7 @@ export const TaskFilterBar = ({
     selectedMember,
     filterCounts,
     onFilterChange,
+    currentUserAddress,
 }: TaskFilterBarProps) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -41,6 +43,8 @@ export const TaskFilterBar = ({
     onFilterChange(filter, member);
     setIsDropdownOpen(false);
   };
+
+  const isWalletConnected = !!currentUserAddress;
 
   return (
     <div style={{
@@ -108,11 +112,18 @@ export const TaskFilterBar = ({
 
         {/* My Tasks タブ */}
         <button
-          onClick={() => handleFilterSelect('myTasks')}
+          onClick={() => {
+            if (!isWalletConnected) {
+              alert('⚠️ Please connect your wallet to use "My Tasks" filter');
+              return
+            }
+            handleFilterSelect('myTasks');
+          }}
           style={{
             padding: '0.625rem 1.25rem',
             borderRadius: '8px',
             fontWeight: '600',
+            fontSize: '0.875rem',
             transition: 'all 0.2s ease',
             border: 'none',
             cursor: 'pointer',
@@ -122,32 +133,39 @@ export const TaskFilterBar = ({
             whiteSpace: 'nowrap',
             background: currentFilter === 'myTasks'
              ? 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
-             : 'rgba(31, 41, 55, 0.8)',
-            color: currentFilter === 'myTasks' ? 'white' : '#D1D5DB',
+             : isWalletConnected
+              ? 'rgba(31, 41, 55, 0.8)'
+              : 'rgba(55, 65, 81, 0.4)',
+            color: isWalletConnected ? (currentFilter === 'myTasks' ? 'white' : '#D1D5DB') : '#6B7280',
             boxShadow: currentFilter === 'myTasks'
              ? '0 4px 12px rgba(59, 130, 246, 0.4)'
              : 'none',
+            filter: isWalletConnected ? 'none' : 'grayscale(100%)'
           }}
           onMouseEnter={(e) => {
-            if (currentFilter !== 'myTasks') {
+            if (isWalletConnected && currentFilter !== 'myTasks') {
               e.currentTarget.style.background = 'rgba(55, 65, 81, 0.9)';
+            } else if (!isWalletConnected) {
+              e.currentTarget.style.background = 'rgba(75, 85, 99, 0.5)';
             }
           }}
           onMouseLeave={(e) => {
-            if (currentFilter !== 'myTasks') {
+            if (isWalletConnected && currentFilter !== 'myTasks') {
               e.currentTarget.style.background = 'rgba(31, 41, 55, 0.8)';
+            } else if (!isWalletConnected) {
+              e.currentTarget.style.background = 'rgba(55, 65, 81, 0.4)';
             }
           }}
          >
-          <span>👤</span>
+          {isWalletConnected ? <span>👤</span> : <span>🔒</span>}
           <span>My Tasks</span>
           <span style={{
             fontSize: '0.75rem',
             padding: '0.125rem 0.5rem',
             borderRadius: '9999px',
-            background: currentFilter === 'myTasks'
-             ? 'rgba(255, 255, 255, 0.2)'
-             : 'rgba(17, 24, 39, 0.6)',
+            background: currentFilter === 'myTasks' 
+              ? 'rgba(255, 255, 255, 0.2)' 
+              : 'rgba(17, 24, 39, 0.6)',
           }}>
             {filterCounts.myTasks}
           </span>
@@ -270,6 +288,8 @@ export const TaskFilterBar = ({
               top: 'calc(100% + 0.5rem)',
               left: 0,
               minWidth: '240px',
+              maxHeight: '300px',
+              overflowY: 'auto',
               background: 'linear-gradient(to bottom, rgba(31, 41, 55, 0.98), rgba(17, 24, 39, 0.98))',
               backdropFilter: 'blur(10px)',
               border: '1px solid rgba(75, 85, 99, 0.5)',

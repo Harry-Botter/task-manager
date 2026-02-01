@@ -15,213 +15,476 @@ Suilog（タスク管理 & Web3貢献度トラッカー）に、複数人での�
 
 ## ✅ 実装済み機能
 
-- ✅ 基本的なタスク管理（CRUD）
-- ✅ タスクステータス管理（pending → in-progress → completed）
-- ✅ 繰り返しタスク生成（毎週）
-- ✅ ローカルストレージ連携
-- ✅ WeeklyChart・GanttChart可視化
-- ✅ ProjectCompletionProof NFT発行スマートコントラクト
-- ✅ ConnectButton・ウォレット接続基盤
+### Phase 1: マルチユーザー基盤構築（UI 大幅修正完了）
+
+**データモデル拡張** ✅
+- ✅ `Task` 型に `assignedTo: string | null` フィールド追加
+- ✅ `Project` 型に `members: string[]` フィールド追加
+- ✅ スキーマ移行処理（既存タスクに null 設定）
+
+**コンポーネント新規実装** ✅
+- ✅ `MemberSelector.tsx` - 担当者選択ドロップダウン
+- ✅ `TaskFilterBar.tsx` - タブベースフィルター UI
+- ✅ `MemberList.tsx` - メンバー一覧表示 + 追加フォーム
+
+**既存コンポーネント修正** ✅
+- ✅ `TaskForm.tsx` - MemberSelector 統合
+- ✅ `TaskTable.tsx` - 「Assigned To」列追加
+- ✅ `TaskEditModal.tsx` - 担当者変更検知
+- ✅ `App.tsx` - TaskFilterBar 統合
 
 ---
 
-## 🚧 Phase別実装ロードマップ
+## 🚧 MVP 完成のための残タスク（優先度順）
 
-### Phase 1: マルチユーザー基盤構築（現在）
+### 🔴 Phase 1-Final: MVP 完成（現在ここ！）
 
-**目標**: 単一ブラウザ環境で複数ウォレットをシミュレート
+#### 1. **App.tsx フィルター計算ロジック** 🚨 Critical
+**状態**: 不完全
 
-#### 1-1. データモデル拡張
-- [-] `Task` 型に `assignedTo: string | null` フィールド追加
-- [-] `Project` 型に `members: string[]` フィールド追加
-- [-] `assignedTo` のスキーマ移行（既存タスクにnull設定）
+**必要な実装**:
+```typescript
+// src/App.tsx の getFilteredTasks() に追加
 
-#### 1-2. コンポーネント新規実装
-
-**MemberSelector.tsx** 
-- [-] ドロップダウンコンポーネント
-- [-] 短縮アドレス表示（0x1234...5678）
-- [-] Unassigned オプション
-- [-] onChange コールバック
-
-**TaskFilterBar.tsx**
-- [-] タブベースのフィルターUI
-- [-] フィルター種類: All Tasks / My Tasks / Unassigned / By Member
-- [-] 各フィルターのタスク数表示
-- [-] 現在のフィルターのハイライト
-
-**MemberList.tsx**（Sidebar内に統合）👈今ここ！！
-- [-] メンバー一覧表示
-- [-] 各メンバーのタスク数カウント
-- [-] メンバー追加フォーム（アドレス入力）
-
-#### 1-3. 既存コンポーネント修正
-
-**TaskForm.tsx**
-- [ ] `MemberSelector` を担当者選択フィールドとして統合
-- [ ] フォーム送信時に `assignedTo` を設定
-
-**TaskTable.tsx**
-- [ ] 新しい列「Assigned To」を追加
-- [ ] 担当者名を短縮アドレスで表示
-- [ ] Unassigned タスクには「-」表示
-
-**TaskEditModal.tsx**
-- [ ] 担当者変更機能を追加
-- [ ] 担当者変更検知ロジック
-
-**App.tsx**
-- [ ] `TaskFilterBar` を TaskTable 上部に配置
-- [ ] フィルター状態を管理
-- [ ] `getFilteredTasks()` ロジック実装
-
-#### 1-4. ローカルストレージ改善
-- [ ] ユーザーごとのプロジェクト分離キー（wallet address）
-- [ ] 同じブラウザで複数ウォレット切り替えテスト対応
-- [ ] データ永続化確認
-
----
-
-### Phase 2: タスク割り当てトランザクション統合（Next）
-
-**スマートコントラクト修正**
-- [ ] `assign_task()` 関数実装
-  - パラメータ: `project_id`, `task_id`, `assigned_to: address`, `assigned_by: address`
-  - イベント: `TaskAssigned`
+// フィルター数を計算する関数（タスク表示の上に使用）
+const calculateFilterCounts = () => {
+  const normalizedCurrentAddress = account?.address?.toLowerCase();
   
-**フロントエンド統合**
-- [ ] タスク作成時に `assign_task()` トランザクション発行
-- [ ] 担当者変更時に `assign_task()` トランザクション発行
-- [ ] トランザクション成功/失敗ハンドリング
-- [ ] Loading状態UI表示
-- [ ] エラーメッセージ表示
+  return {
+    all: tasks.length,
+    myTasks: tasks.filter(t => 
+      t.assignedTo?.toLowerCase() === normalizedCurrentAddress
+    ).length,
+    unassigned: tasks.filter(t => t.assignedTo === null).length,
+    byMember: selectedMemberFilter 
+      ? tasks.filter(t => 
+          t.assignedTo?.toLowerCase() === selectedMemberFilter.toLowerCase()
+        ).length
+      : 0,
+  };
+};
 
----
-
-### Phase 3: NFT発行フロー完成（Future）
-
-**マルチメンバーNFT発行**
-- [ ] プロジェクト完了時、メンバーごとに `mint_personal_completion_proof()` 呼び出し
-- [ ] 各メンバーの貢献度スコア集計
-- [ ] バッチトランザクション実行
-- [ ] NFT Gallery表示
-
----
-
-### Phase 4: Supabase統合（Future）
-
-- [ ] Supabase Auth + RLS設定
-- [ ] projects, tasks, members テーブル作成
-- [ ] リアルタイムSync実装
-- [ ] 複数ブラウザ・複数デバイス対応
-
----
-
-## 🎯 Phase 1 詳細仕様
-
-### 1. マルチユーザー対応
-
-#### ユーザー識別
-- Suiウォレットアドレスで識別
-- 役割(Role)による権限分離は**しない**（全員が平等）
-- 全メンバーが全タスクの作成・編集・削除・割り当て変更が可能
-
-#### プロジェクト構造
-- 1プロジェクトに複数メンバーが参加
-- 全員が全メンバーのタスクを閲覧可能
-- メンバー追加はウォレットアドレスで行う（手動入力）
-- **Phase 1制限**: 同一ブラウザ内での複数ウォレット切り替えのみ対応
-
----
-
-### 2. タスク担当者機能
-
-#### タスク割り当てルール
-
-1. タスク作成時に担当者を指定可能（未割り当ても可）
-2. タスク編集画面で誰でも担当者を変更可能
-3. **Phase 1**: 担当者変更は localStorage のみ更新（スマートコントラクト統合は Phase 2）
-4. `assignedTo`が`null`の場合は「Unassigned」（バックログ）
-
----
-
-### 3. フィルター機能
-
-#### フィルター種類
-
-- **All Tasks**: 全タスク表示
-- **My Tasks**: 現在接続中のウォレットアドレスが `assignedTo` に等しいタスク
-- **Unassigned**: `assignedTo === null` のタスク
-- **By Member**: ドロップダウンでメンバーを選択してフィルター
-
-#### UI配置
-
-- `TaskTable` の上部に `TaskFilterBar` コンポーネントを配置
-- フィルター状態は React state で管理
-- 複数フィルターの同時適用は未対応（1つのみ選択可能）
-
-#### フィルター時のタスク数表示
-
-```
-All Tasks (12) | My Tasks (5) | Unassigned (3) | By Member ▼
+const filterCounts = calculateFilterCounts();
 ```
 
+**UI 渡し先**: `<TaskFilterBar ... filterCounts={filterCounts} />`
+
+**テスト方法**:
+- All Tasks に「12」と表示されるか確認
+- My Tasks にフィルターしたときに正しい数が出るか確認
+- Unassigned に 0 または 1 以上が出るか確認
+
 ---
 
-## 🎨 UI/UXコンポーネント設計
+#### 2. **ウォレット未接続時の My Tasks 防御** 🚨 Critical
+**状態**: 現在の問題で自動フィルター適用時に `account === undefined` で暴走
 
-### 既存コンポーネントの修正
-
-#### `TaskForm.tsx` の変更
-**担当者選択UI の追加**:
+**必要な実装**:
 ```typescript
-<MemberSelector
-  members={members}
-  value={assignedTo}
-  onChange={setAssignedTo}
-  allowUnassigned={true}
-/>
+// src/App.tsx の handleFilterChange() 内
+
+const handleFilterChange = (newFilter: FilterType, selectedMember?: string | null) => {
+  // My Tasks は未接続時は無効化
+  if (newFilter === 'myTasks' && !account?.address) {
+    alert('⚠️ Please connect your wallet to use "My Tasks" filter');
+    setFilter('all');
+    return;
+  }
+  
+  setFilter(newFilter);
+  if (newFilter === 'byMember' && selectedMember) {
+    setSelectedMemberFilter(selectedMember);
+  }
+};
 ```
 
-**保存時の処理**:
+**UI 表示**: TaskFilterBar で「My Tasks」を disabled 表示
+
 ```typescript
-const newTask = {
-  ...task,
-  assignedTo, // null または address
+// src/components/TaskFilterBar.tsx のボタンに
+
+disabled={!currentUserAddress}
+style={{
+  opacity: !currentUserAddress ? 0.5 : 1,
+  cursor: !currentUserAddress ? 'not-allowed' : 'pointer',
+  ...otherStyles
+}}
+```
+
+---
+
+#### 3. **MemberSelector / TaskFilterBar のアドレス正規化** 🚨 Critical
+**状態**: 「0xABCD」vs「0xabcd」の比較でバグる可能性
+
+**必要な実装**:
+```typescript
+// src/lib/utils.ts（新規作成）
+
+export const normalizeAddress = (address: string): string => {
+  return address.toLowerCase().trim();
+};
+
+export const truncateAddress = (address: string): string => {
+  const normalized = normalizeAddress(address);
+  if (!normalized || normalized.length < 10) return normalized;
+  return `${normalized.slice(0, 6)}...${normalized.slice(-4)}`;
+};
+
+export const addressesEqual = (addr1: string | null, addr2: string | null): boolean => {
+  if (!addr1 || !addr2) return addr1 === addr2;
+  return normalizeAddress(addr1) === normalizeAddress(addr2);
+};
+```
+
+**使用箇所**:
+```typescript
+// App.tsx, TaskFilterBar.tsx, MemberSelector.tsx で
+import { normalizeAddress, addressesEqual } from '../lib/utils';
+
+// 比較時は常に normalizeAddress を使用
+if (normalizeAddress(t.assignedTo) === normalizeAddress(currentUserAddress)) { ... }
+```
+
+---
+
+#### 4. **TaskFormModal の currentUserAddress 自動設定** 🟡 Important
+**状態**: 新規タスク作成時に担当者が空白
+
+**必要な実装**:
+```typescript
+// src/components/TaskForm.tsx の useEffect に追加
+
+useEffect(() => {
+  if (editingTask) {
+    // 編集モード: 既存の assignedTo を保持
+    setAssignedTo(editingTask.assignedTo ?? null);
+  } else if (currentUserAddress) {
+    // 新規作成モード: 現在のウォレットをデフォルト設定
+    setAssignedTo(currentUserAddress);
+  }
+}, [editingTask, currentUserAddress]);
+```
+
+**テスト方法**:
+1. ウォレット接続
+2. 「+ Add Task」をクリック
+3. MemberSelector が自分のアドレスで事前選択されているか確認
+
+---
+
+#### 5. **MemberList 入力検証** 🟡 Important
+**状態**: アドレス形式のチェックなし、重複チェックなし
+
+**必要な実装**:
+```typescript
+// src/components/MemberList.tsx の handleAddMember() 内
+
+const handleAddMember = (address: string) => {
+  const trimmed = address.trim();
+  
+  // 1. 形式チェック
+  if (!trimmed.startsWith('0x') || trimmed.length !== 42) {
+    alert('❌ Invalid address format. Expected: 0x + 40 hex characters');
+    return;
+  }
+  
+  // 2. 16進数チェック
+  if (!/^0x[0-9a-fA-F]{40}$/.test(trimmed)) {
+    alert('❌ Invalid address. Must contain only hex characters (0-9, a-f)');
+    return;
+  }
+  
+  // 3. 重複チェック
+  const normalized = trimmed.toLowerCase();
+  if (members.some(m => m.toLowerCase() === normalized)) {
+    alert('⚠️ This member is already in the project');
+    return;
+  }
+  
+  // OK: 追加処理
+  onAddMember(trimmed);
+  setInputValue(''); // 入力フォームをクリア
 };
 ```
 
 ---
 
-#### `TaskTable.tsx` の変更
+#### 6. **By Member フィルターの UI スクロール対応** 🟡 Important
+**状態**: メンバーが多いとドロップダウンが画面を超える
 
-**新しい列を追加**:
-- 列名: "Assigned To"
-- 内容: 短縮アドレスまたは「-」（Unassigned）
-- 幅: 120px
-
+**必要な実装**:
 ```typescript
-{
-  header: 'Assigned To',
-  cell: (task) => task.assignedTo ? truncateAddress(task.assignedTo) : '-',
-  width: '120px',
-}
+// src/components/TaskFilterBar.tsx のドロップダウン内
+
+{isDropdownOpen && (
+  <div style={{
+    position: 'absolute',
+    zIndex: 50,
+    top: 'calc(100% + 0.5rem)',
+    left: 0,
+    minWidth: '240px',
+    maxHeight: '300px',  // ← 追加
+    overflowY: 'auto',   // ← 追加
+    background: 'linear-gradient(to bottom, rgba(31, 41, 55, 0.98), rgba(17, 24, 39, 0.98))',
+    // ...他のスタイル
+  }}>
 ```
 
 ---
 
-#### `App.tsx` の変更
+### 🟢 テスト方法（MVP 完成確認）
 
-**Project初期化**:
-```typescript
-const [project, setProject] = useState<Project>(() => {
-  const stored = storage.getProject();
-  return {
-    ...stored,
-    members: stored.members || [],
-  };
-});
+#### シナリオ 1: フィルター表示動作確認
 ```
+1. ウォレット接続（例: User A）
+2.「All Tasks」タブ → 全タスク数が表示される
+3. 「My Tasks」タブ → User A に割り当てたタスクのみ表示
+4. 「Unassigned」タブ → assignedTo === null のタスクのみ表示
+5. 「By Member」ドロップダウン → User B を選択 → User B のタスク表// filepath: /Users/kawakuboyukhiro/開発/Suilog/.github/copilot-instructions.md
+
+# Suilog - マルチユーザータスク管理機能 開発仕様書
+
+## プロジェクト概要
+Suilog（タスク管理 & Web3貢献度トラッカー）に、複数人でのタスク管理機能を追加する。
+
+## 技術スタック
+- **Frontend**: React 18 + TypeScript + Vite + Tailwind CSS
+- **Web3**: @mysten/dapp-kit + @mysten/sui
+- **Storage**: localStorage (Phase 1) → Supabase (Phase 4)
+- **Smart Contract**: Move (Sui blockchain)
+- **Network**: Sui Devnet
+- **Deploy**: Vercel
+
+---
+
+## ✅ 実装済み機能
+
+### Phase 1: マルチユーザー基盤構築（UI 大幅修正完了）
+
+**データモデル拡張** ✅
+- ✅ `Task` 型に `assignedTo: string | null` フィールド追加
+- ✅ `Project` 型に `members: string[]` フィールド追加
+- ✅ スキーマ移行処理（既存タスクに null 設定）
+
+**コンポーネント新規実装** ✅
+- ✅ `MemberSelector.tsx` - 担当者選択ドロップダウン
+- ✅ `TaskFilterBar.tsx` - タブベースフィルター UI
+- ✅ `MemberList.tsx` - メンバー一覧表示 + 追加フォーム
+
+**既存コンポーネント修正** ✅
+- ✅ `TaskForm.tsx` - MemberSelector 統合
+- ✅ `TaskTable.tsx` - 「Assigned To」列追加
+- ✅ `TaskEditModal.tsx` - 担当者変更検知
+- ✅ `App.tsx` - TaskFilterBar 統合
+
+---
+
+## 🚧 MVP 完成のための残タスク（優先度順）
+
+### 🔴 Phase 1-Final: MVP 完成（現在ここ！）
+
+#### 1. **App.tsx フィルター計算ロジック** 🚨 Critical
+**状態**: 不完全
+
+**必要な実装**:
+```typescript
+// src/App.tsx の getFilteredTasks() に追加
+
+// フィルター数を計算する関数（タスク表示の上に使用）
+const calculateFilterCounts = () => {
+  const normalizedCurrentAddress = account?.address?.toLowerCase();
+  
+  return {
+    all: tasks.length,
+    myTasks: tasks.filter(t => 
+      t.assignedTo?.toLowerCase() === normalizedCurrentAddress
+    ).length,
+    unassigned: tasks.filter(t => t.assignedTo === null).length,
+    byMember: selectedMemberFilter 
+      ? tasks.filter(t => 
+          t.assignedTo?.toLowerCase() === selectedMemberFilter.toLowerCase()
+        ).length
+      : 0,
+  };
+};
+
+const filterCounts = calculateFilterCounts();
+```
+
+**UI 渡し先**: `<TaskFilterBar ... filterCounts={filterCounts} />`
+
+**テスト方法**:
+- All Tasks に「12」と表示されるか確認
+- My Tasks にフィルターしたときに正しい数が出るか確認
+- Unassigned に 0 または 1 以上が出るか確認
+
+---
+
+#### 2. **ウォレット未接続時の My Tasks 防御** 🚨 Critical
+**状態**: 現在の問題で自動フィルター適用時に `account === undefined` で暴走
+
+**必要な実装**:
+```typescript
+// src/App.tsx の handleFilterChange() 内
+
+const handleFilterChange = (newFilter: FilterType, selectedMember?: string | null) => {
+  // My Tasks は未接続時は無効化
+  if (newFilter === 'myTasks' && !account?.address) {
+    alert('⚠️ Please connect your wallet to use "My Tasks" filter');
+    setFilter('all');
+    return;
+  }
+  
+  setFilter(newFilter);
+  if (newFilter === 'byMember' && selectedMember) {
+    setSelectedMemberFilter(selectedMember);
+  }
+};
+```
+
+**UI 表示**: TaskFilterBar で「My Tasks」を disabled 表示
+
+```typescript
+// src/components/TaskFilterBar.tsx のボタンに
+
+disabled={!currentUserAddress}
+style={{
+  opacity: !currentUserAddress ? 0.5 : 1,
+  cursor: !currentUserAddress ? 'not-allowed' : 'pointer',
+  ...otherStyles
+}}
+```
+
+---
+
+#### 3. **MemberSelector / TaskFilterBar のアドレス正規化** 🚨 Critical
+**状態**: 「0xABCD」vs「0xabcd」の比較でバグる可能性
+
+**必要な実装**:
+```typescript
+// src/lib/utils.ts（新規作成）
+
+export const normalizeAddress = (address: string): string => {
+  return address.toLowerCase().trim();
+};
+
+export const truncateAddress = (address: string): string => {
+  const normalized = normalizeAddress(address);
+  if (!normalized || normalized.length < 10) return normalized;
+  return `${normalized.slice(0, 6)}...${normalized.slice(-4)}`;
+};
+
+export const addressesEqual = (addr1: string | null, addr2: string | null): boolean => {
+  if (!addr1 || !addr2) return addr1 === addr2;
+  return normalizeAddress(addr1) === normalizeAddress(addr2);
+};
+```
+
+**使用箇所**:
+```typescript
+// App.tsx, TaskFilterBar.tsx, MemberSelector.tsx で
+import { normalizeAddress, addressesEqual } from '../lib/utils';
+
+// 比較時は常に normalizeAddress を使用
+if (normalizeAddress(t.assignedTo) === normalizeAddress(currentUserAddress)) { ... }
+```
+
+---
+
+#### 4. **TaskFormModal の currentUserAddress 自動設定** 🟡 Important
+**状態**: 新規タスク作成時に担当者が空白
+
+**必要な実装**:
+```typescript
+// src/components/TaskForm.tsx の useEffect に追加
+
+useEffect(() => {
+  if (editingTask) {
+    // 編集モード: 既存の assignedTo を保持
+    setAssignedTo(editingTask.assignedTo ?? null);
+  } else if (currentUserAddress) {
+    // 新規作成モード: 現在のウォレットをデフォルト設定
+    setAssignedTo(currentUserAddress);
+  }
+}, [editingTask, currentUserAddress]);
+```
+
+**テスト方法**:
+1. ウォレット接続
+2. 「+ Add Task」をクリック
+3. MemberSelector が自分のアドレスで事前選択されているか確認
+
+---
+
+#### 5. **MemberList 入力検証** 🟡 Important
+**状態**: アドレス形式のチェックなし、重複チェックなし
+
+**必要な実装**:
+```typescript
+// src/components/MemberList.tsx の handleAddMember() 内
+
+const handleAddMember = (address: string) => {
+  const trimmed = address.trim();
+  
+  // 1. 形式チェック
+  if (!trimmed.startsWith('0x') || trimmed.length !== 42) {
+    alert('❌ Invalid address format. Expected: 0x + 40 hex characters');
+    return;
+  }
+  
+  // 2. 16進数チェック
+  if (!/^0x[0-9a-fA-F]{40}$/.test(trimmed)) {
+    alert('❌ Invalid address. Must contain only hex characters (0-9, a-f)');
+    return;
+  }
+  
+  // 3. 重複チェック
+  const normalized = trimmed.toLowerCase();
+  if (members.some(m => m.toLowerCase() === normalized)) {
+    alert('⚠️ This member is already in the project');
+    return;
+  }
+  
+  // OK: 追加処理
+  onAddMember(trimmed);
+  setInputValue(''); // 入力フォームをクリア
+};
+```
+
+---
+
+#### 6. **By Member フィルターの UI スクロール対応** 🟡 Important
+**状態**: メンバーが多いとドロップダウンが画面を超える
+
+**必要な実装**:
+```typescript
+// src/components/TaskFilterBar.tsx のドロップダウン内
+
+{isDropdownOpen && (
+  <div style={{
+    position: 'absolute',
+    zIndex: 50,
+    top: 'calc(100% + 0.5rem)',
+    left: 0,
+    minWidth: '240px',
+    maxHeight: '300px',  // ← 追加
+    overflowY: 'auto',   // ← 追加
+    background: 'linear-gradient(to bottom, rgba(31, 41, 55, 0.98), rgba(17, 24, 39, 0.98))',
+    // ...他のスタイル
+  }}>
+```
+
+---
+
+### 🟢 テスト方法（MVP 完成確認）
+
+#### シナリオ 1: フィルター表示動作確認
+```
+1. ウォレット接続（例: User A）
+2.「All Tasks」タブ → 全タスク数が表示される
+3. 「My Tasks」タブ → User A に割り当てたタスクのみ表示
+4. 「Unassigned」タブ → assignedTo === null のタスクのみ表示
+5. 「By Member」ドロップダウン → User B を選択 → User B のタスク表
 
 
 ---
@@ -310,21 +573,6 @@ const [project, setProject] = useState<Project>(() => {
 - 将来的には個人ごとにカスタマイズ可能に
 
 ---
-
-## 📝 実装チェックリスト（Phase 1）
-
-- [-] `Task` 型に `assignedTo: string | null` 追加
-- [-] `Project` 型に `members: string[]` 追加
-- [ ] localStorage のマイグレーション処理
-- [-] `MemberSelector.tsx` 実装
-- [ ] `TaskFilterBar.tsx` 実装
-- [-] `MemberList.tsx` 実装
-- [ ] `TaskForm.tsx` に MemberSelector 統合
-- [ ] `TaskEditModal.tsx` で担当者変更対応
-- [ ] `TaskTable.tsx` に「Assigned To」列追加
-- [ ] `App.tsx` にフィルターロジック実装
-- [ ] ウォレット切り替え動作確認テスト
-- [ ] UI/UX レビュー
 
 ## 🤖 GitHub Copilot / AI 実装ガイドライン（重要）
 

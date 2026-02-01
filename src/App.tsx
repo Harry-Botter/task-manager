@@ -215,6 +215,12 @@ function App() {
   const editingTask = editingTaskId ? tasks.find((t) => t.id === editingTaskId) : null;
 
   const handleFilterChange = (newFilter: FilterType, member?: string) => {
+    //My Tasksはウォレットが接続されていないと無効
+    if (newFilter === 'myTasks' && !account?.address) {
+      alert('⚠️ Please connect your wallet to use "My Tasks" filter');
+      return; //フィルターの変更をキャンセル
+    }
+    
     setFilter(newFilter);
     if (member) {
       setSelectedMemberFilter(member);
@@ -266,6 +272,7 @@ function App() {
             selectedMember={selectedMemberFilter}
             filterCounts={filterCounts}
             onFilterChange={handleFilterChange}
+            currentUserAddress={account?.address}
           />
 
           <div>
