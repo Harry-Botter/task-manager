@@ -170,84 +170,6 @@ All Tasks (12) | My Tasks (5) | Unassigned (3) | By Member ▼
 
 ## 🎨 UI/UXコンポーネント設計
 
-### 新規コンポーネント
-
-#### 1. `MemberSelector.tsx`
-
-**目的**: タスクフォームで担当者を選択
-
-**Props**:
-```typescript
-interface MemberSelectorProps {
-  members: string[]; // ウォレットアドレスの配列
-  value: string | null; // 現在の選択値
-  onChange: (address: string | null) => void;
-  allowUnassigned?: boolean; // デフォルト: true
-}
-```
-
-**実装ポイント**:
-- ドロップダウンで表示
-- アドレスは短縮形（`0x1234...5678`）で表示
-- `allowUnassigned`が`true`の場合、「Unassigned」オプションを表示
-- 選択時に`onChange`コールバックを実行
-
----
-
-#### 2. `TaskFilterBar.tsx`
-
-**目的**: タスク一覧のフィルター機能
-
-**Props**:
-```typescript
-interface TaskFilterBarProps {
-  currentFilter: 'all' | 'myTasks' | 'unassigned' | 'byMember';
-  members: string[];
-  selectedMember?: string | null;
-  filterCounts: {
-    all: number;
-    myTasks: number;
-    unassigned: number;
-    [key: string]: number; // By Member の各メンバーのカウント
-  };
-  onFilterChange: (filter: 'all' | 'myTasks' | 'unassigned' | 'byMember', member?: string) => void;
-}
-```
-
-**実装ポイント**:
-- タブベースの実装
-- 各フィルターのタスク数を表示（例: My Tasks (5)）
-- 現在のフィルターをハイライト表示
-- By Member 選択時はドロップダウン表示
-
----
-
-#### 3. `MemberList.tsx`（Sidebar に統合）
-
-**目的**: プロジェクトメンバー一覧と各メンバーのタスク数を表示
-
-**Props**:
-```typescript
-interface MemberListProps {
-  members: string[];
-  tasks: Task[];
-  onAddMember: (address: string) => void;
-  currentUserAddress?: string;
-}
-```
-
-**表示内容**:
-```
-👥 Members (3)
-  • 0x1234...5678 (5 tasks) ← you
-  • 0xabcd...ef01 (3 tasks)
-  • 0x9876...4321 (2 tasks)
-
-[+ Add Member] (入力フォーム)
-```
-
----
-
 ### 既存コンポーネントの修正
 
 #### `TaskForm.tsx` の変更
@@ -301,26 +223,6 @@ const [project, setProject] = useState<Project>(() => {
 });
 ```
 
-**フィルター機能**:
-```typescript
-type FilterType = 'all' | 'myTasks' | 'unassigned' | 'byMember';
-const [filter, setFilter] = useState<FilterType>('all');
-const [selectedMemberFilter, setSelectedMemberFilter] = useState<string | null>(null);
-
-const getFilteredTasks = () => {
-  let filtered = tasks;
-  
-  if (filter === 'myTasks') {
-    filtered = tasks.filter(t => t.assignedTo === account?.address);
-  } else if (filter === 'unassigned') {
-    filtered = tasks.filter(t => t.assignedTo === null);
-  } else if (filter === 'byMember' && selectedMemberFilter) {
-    filtered = tasks.filter(t => t.assignedTo === selectedMemberFilter);
-  }
-  
-  return filtered;
-};
-```
 
 ---
 

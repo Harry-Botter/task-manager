@@ -9,8 +9,8 @@ interface TaskFormProps {
   onEditTask?: (task: Task) => void;
   onCancel?: () => void;
   editingTask?: Task;
-  members?: string[]; // Phase 1: メンバーリスト
-  currentUserAddress?: string; // Phase 1: 現在のウォレットアドレス
+  members?: string[];
+  currentUserAddress?: string;
 }
 
 export default function TaskForm({ 
@@ -42,7 +42,6 @@ export default function TaskForm({
     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   );
 
-  // Phase 1: 担当者フィールド追加
   const [assignedTo, setAssignedTo] = useState<string | null>(null);
 
   useEffect(() => {
@@ -58,10 +57,8 @@ export default function TaskForm({
         setRecurringEndDate(new Date(editingTask.recurringEndDate).toISOString().split('T')[0]);
       }
       setDueDate(new Date(editingTask.dueDate).toISOString().split('T')[0]);
-      // Phase 1: 既存タスクから担当者を読み込む
       setAssignedTo(editingTask.assignedTo ?? null);
     } else {
-      // 新規作成時は現在のユーザーをデフォルト割り当て
       if (currentUserAddress) {
         setAssignedTo(currentUserAddress);
       }
@@ -91,7 +88,6 @@ export default function TaskForm({
         recurringEndDate: isRecurring ? new Date(recurringEndDate).getTime() : undefined,
         recurringDayOfWeek: isRecurring ? dayOfWeek : undefined,
         dueDate: new Date(dueDate).getTime(),
-        // Phase 1: 担当者情報を保存
         assignedTo,
       };
       
@@ -114,7 +110,6 @@ export default function TaskForm({
         dueDate: new Date(dueDate).getTime(),
         status: 'pending',
         createdAt: Date.now(),
-        // Phase 1: 担当者情報を設定
         assignedTo,
       };
       
@@ -126,20 +121,45 @@ export default function TaskForm({
   const estimatedHours = (estimatedMinutes / 60).toFixed(1);
 
   return (
-    <form onSubmit={handleSubmit} className="bg-gray-800 rounded-lg" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+    <form 
+      onSubmit={handleSubmit} 
+      style={{
+        background: 'linear-gradient(to bottom, #1F2937, #111827)',
+        borderRadius: '16px',
+        maxHeight: '90vh',
+        overflowY: 'auto',
+        border: '1px solid rgba(55, 65, 81, 0.5)',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+      }}
+    >
       {/* ヘッダー */}
       <div style={{ 
         padding: '1.5rem',
-        borderBottom: '1px solid #374151',
+        borderBottom: '1px solid rgba(55, 65, 81, 0.5)',
         position: 'sticky',
         top: 0,
-        backgroundColor: '#1F2937',
+        background: 'linear-gradient(to right, rgba(31, 41, 55, 0.98), rgba(17, 24, 39, 0.98))',
+        backdropFilter: 'blur(10px)',
         zIndex: 10,
+        borderTopLeftRadius: '16px',
+        borderTopRightRadius: '16px',
       }}>
-        <h3 className="text-2xl font-bold text-white flex items-center gap-2">
-          {isEditMode ? '✏️ Edit Task' : '✨ Create New Task'}
+        <h3 style={{
+          fontSize: '1.5rem',
+          fontWeight: 'bold',
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          marginBottom: '0.25rem',
+        }}>
+          <span style={{ fontSize: '1.75rem' }}>{isEditMode ? '✏️' : '✨'}</span>
+          <span>{isEditMode ? 'Edit Task' : 'Create New Task'}</span>
         </h3>
-        <p className="text-sm text-gray-400 mt-1">
+        <p style={{
+          fontSize: '0.875rem',
+          color: '#9CA3AF',
+        }}>
           {isEditMode ? 'Update your task details' : 'Plan your work and conquer your goals'}
         </p>
       </div>
@@ -152,15 +172,23 @@ export default function TaskForm({
             alignItems: 'center', 
             gap: '0.5rem', 
             marginBottom: '1rem',
-            paddingBottom: '0.5rem',
-            borderBottom: '2px solid #374151'
+            paddingBottom: '0.75rem',
+            borderBottom: '2px solid rgba(59, 130, 246, 0.3)',
           }}>
             <span style={{ fontSize: '1.25rem' }}>📝</span>
-            <h4 className="text-lg font-semibold text-white">Basic Information</h4>
+            <h4 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'white', margin: 0 }}>
+              Basic Information
+            </h4>
           </div>
           
           <div style={{ marginBottom: '1rem' }}>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label style={{
+              display: 'block',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              color: '#D1D5DB',
+              marginBottom: '0.5rem',
+            }}>
               Task Title <span style={{ color: '#EF4444' }}>*</span>
             </label>
             <input
@@ -169,13 +197,37 @@ export default function TaskForm({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="What do you want to accomplish?"
               required
-              className="w-full px-4 py-3 bg-gray-900 border-2 border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               autoFocus
+              style={{
+                width: '100%',
+                padding: '0.75rem 1rem',
+                background: 'rgba(17, 24, 39, 0.8)',
+                border: '2px solid #374151',
+                borderRadius: '8px',
+                color: 'white',
+                fontSize: '0.875rem',
+                outline: 'none',
+                transition: 'all 0.2s ease',
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#3B82F6';
+                e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#374151';
+                e.target.style.boxShadow = 'none';
+              }}
             />
           </div>
           
           <div style={{ marginBottom: '1rem' }}>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label style={{
+              display: 'block',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              color: '#D1D5DB',
+              marginBottom: '0.5rem',
+            }}>
               Description
             </label>
             <textarea
@@ -183,44 +235,96 @@ export default function TaskForm({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Add details, notes, or context..."
               rows={3}
-              className="w-full px-4 py-3 bg-gray-900 border-2 border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+              style={{
+                width: '100%',
+                padding: '0.75rem 1rem',
+                background: 'rgba(17, 24, 39, 0.8)',
+                border: '2px solid #374151',
+                borderRadius: '8px',
+                color: 'white',
+                fontSize: '0.875rem',
+                outline: 'none',
+                transition: 'all 0.2s ease',
+                resize: 'none',
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#3B82F6';
+                e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#374151';
+                e.target.style.boxShadow = 'none';
+              }}
             />
           </div>
 
           <div style={{ marginBottom: '1rem' }}>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label style={{
+              display: 'block',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              color: '#D1D5DB',
+              marginBottom: '0.5rem',
+            }}>
               Priority Level
             </label>
-            <div className="grid grid-cols-4 gap-2">
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '0.5rem',
+            }}>
               {(['low', 'medium', 'high', 'urgent'] as Priority[]).map((p) => {
                 const priorityConfig = {
-                  low: { emoji: '🟢', color: 'bg-green-600', hoverColor: 'hover:bg-green-700', label: 'Low' },
-                  medium: { emoji: '🟡', color: 'bg-yellow-600', hoverColor: 'hover:bg-yellow-700', label: 'Medium' },
-                  high: { emoji: '🟠', color: 'bg-orange-600', hoverColor: 'hover:bg-orange-700', label: 'High' },
-                  urgent: { emoji: '🔴', color: 'bg-red-600', hoverColor: 'hover:bg-red-700', label: 'Urgent' },
+                  low: { emoji: '🟢', gradient: 'linear-gradient(135deg, #10B981, #059669)', label: 'Low' },
+                  medium: { emoji: '🟡', gradient: 'linear-gradient(135deg, #F59E0B, #D97706)', label: 'Medium' },
+                  high: { emoji: '🟠', gradient: 'linear-gradient(135deg, #F97316, #EA580C)', label: 'High' },
+                  urgent: { emoji: '🔴', gradient: 'linear-gradient(135deg, #EF4444, #DC2626)', label: 'Urgent' },
                 };
                 const config = priorityConfig[p];
+                const isSelected = priority === p;
                 
                 return (
                   <button
                     key={p}
                     type="button"
                     onClick={() => setPriority(p)}
-                    className={`py-3 rounded-lg text-sm font-medium transition-all transform ${
-                      priority === p
-                        ? `${config.color} text-white scale-105 shadow-lg`
-                        : `bg-gray-700 text-gray-300 ${config.hoverColor} hover:scale-105`
-                    }`}
+                    style={{
+                      padding: '0.75rem',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      transition: 'all 0.2s ease',
+                      border: 'none',
+                      cursor: 'pointer',
+                      background: isSelected ? config.gradient : 'rgba(31, 41, 55, 0.8)',
+                      color: 'white',
+                      transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                      boxShadow: isSelected 
+                        ? '0 4px 12px rgba(0, 0, 0, 0.3)' 
+                        : 'none',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSelected) {
+                        e.currentTarget.style.background = 'rgba(55, 65, 81, 0.9)';
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSelected) {
+                        e.currentTarget.style.background = 'rgba(31, 41, 55, 0.8)';
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }
+                    }}
                   >
-                    <div>{config.emoji}</div>
-                    <div className="text-xs mt-1">{config.label}</div>
+                    <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{config.emoji}</div>
+                    <div style={{ fontSize: '0.75rem' }}>{config.label}</div>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Phase 1: 担当者選択 */}
+          {/* 担当者選択 */}
           {members.length > 0 && (
             <div style={{ marginTop: '1rem' }}>
               <MemberSelector
@@ -242,64 +346,146 @@ export default function TaskForm({
             alignItems: 'center', 
             gap: '0.5rem', 
             marginBottom: '1rem',
-            paddingBottom: '0.5rem',
-            borderBottom: '2px solid #374151'
+            paddingBottom: '0.75rem',
+            borderBottom: '2px solid rgba(59, 130, 246, 0.3)',
           }}>
             <span style={{ fontSize: '1.25rem' }}>📅</span>
-            <h4 className="text-lg font-semibold text-white">Schedule</h4>
+            <h4 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'white', margin: 0 }}>
+              Schedule
+            </h4>
           </div>
           
           <div style={{ marginBottom: '1rem' }}>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label style={{
+              display: 'block',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              color: '#D1D5DB',
+              marginBottom: '0.5rem',
+            }}>
               Scheduled Date <span style={{ color: '#EF4444' }}>*</span>
             </label>
             <input
               type="date"
               value={scheduledDate}
               onChange={(e) => setScheduledDate(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-900 border-2 border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              style={{
+                width: '100%',
+                padding: '0.75rem 1rem',
+                background: 'rgba(17, 24, 39, 0.8)',
+                border: '2px solid #374151',
+                borderRadius: '8px',
+                color: 'white',
+                fontSize: '0.875rem',
+                outline: 'none',
+                transition: 'all 0.2s ease',
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#3B82F6';
+                e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#374151';
+                e.target.style.boxShadow = 'none';
+              }}
             />
           </div>
           
-          <div className="grid grid-cols-2 gap-3 mb-3">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label style={{
+                display: 'block',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                color: '#D1D5DB',
+                marginBottom: '0.5rem',
+              }}>
                 Start Time
               </label>
               <input
                 type="time"
                 value={scheduledStartTime}
                 onChange={(e) => setScheduledStartTime(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-900 border-2 border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  background: 'rgba(17, 24, 39, 0.8)',
+                  border: '2px solid #374151',
+                  borderRadius: '8px',
+                  color: 'white',
+                  fontSize: '0.875rem',
+                  outline: 'none',
+                  transition: 'all 0.2s ease',
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#3B82F6';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#374151';
+                  e.target.style.boxShadow = 'none';
+                }}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label style={{
+                display: 'block',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                color: '#D1D5DB',
+                marginBottom: '0.5rem',
+              }}>
                 End Time
               </label>
               <input
                 type="time"
                 value={scheduledEndTime}
                 onChange={(e) => setScheduledEndTime(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-900 border-2 border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  background: 'rgba(17, 24, 39, 0.8)',
+                  border: '2px solid #374151',
+                  borderRadius: '8px',
+                  color: 'white',
+                  fontSize: '0.875rem',
+                  outline: 'none',
+                  transition: 'all 0.2s ease',
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#3B82F6';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#374151';
+                  e.target.style.boxShadow = 'none';
+                }}
               />
             </div>
           </div>
 
           {/* 推定時間表示 */}
           <div style={{
-            padding: '0.75rem',
-            backgroundColor: '#111827',
-            border: '1px solid #374151',
-            borderRadius: '0.5rem',
+            padding: '1rem',
+            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.1))',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+            borderRadius: '10px',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem'
+            gap: '0.75rem',
           }}>
-            <span style={{ fontSize: '1rem' }}>⏱️</span>
-            <span className="text-sm text-gray-400">Estimated Duration:</span>
-            <span className="text-lg font-bold text-blue-400">{estimatedHours}h</span>
-            <span className="text-sm text-gray-500">({estimatedMinutes} minutes)</span>
+            <span style={{ fontSize: '1.5rem' }}>⏱️</span>
+            <div style={{ flex: 1 }}>
+              <span style={{ fontSize: '0.875rem', color: '#9CA3AF' }}>Estimated Duration</span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginTop: '0.25rem' }}>
+                <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#60A5FA' }}>
+                  {estimatedHours}h
+                </span>
+                <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>
+                  ({estimatedMinutes} minutes)
+                </span>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -310,33 +496,46 @@ export default function TaskForm({
             alignItems: 'center', 
             gap: '0.5rem', 
             marginBottom: '1rem',
-            paddingBottom: '0.5rem',
-            borderBottom: '2px solid #374151'
+            paddingBottom: '0.75rem',
+            borderBottom: '2px solid rgba(59, 130, 246, 0.3)',
           }}>
             <span style={{ fontSize: '1.25rem' }}>⚙️</span>
-            <h4 className="text-lg font-semibold text-white">Advanced Settings</h4>
+            <h4 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'white', margin: 0 }}>
+              Advanced Settings
+            </h4>
           </div>
 
           {!isEditMode && (
             <div style={{ 
               marginBottom: '1rem',
               padding: '1rem',
-              backgroundColor: '#111827',
+              background: 'rgba(17, 24, 39, 0.6)',
               border: '2px solid #374151',
-              borderRadius: '0.75rem'
+              borderRadius: '10px',
             }}>
-              <label className="flex items-center cursor-pointer group">
+              <label style={{ display: 'flex', alignItems: 'flex-start', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
                   checked={isRecurring}
                   onChange={(e) => setIsRecurring(e.target.checked)}
-                  className="w-5 h-5 rounded border-gray-700 bg-gray-900 text-blue-600 focus:ring-blue-500 focus:ring-2"
+                  style={{
+                    width: '1.25rem',
+                    height: '1.25rem',
+                    marginTop: '0.125rem',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
                 />
                 <div style={{ marginLeft: '0.75rem', flex: 1 }}>
-                  <div className="text-sm font-medium text-white group-hover:text-blue-400 transition-colors">
+                  <div style={{ 
+                    fontSize: '0.875rem', 
+                    fontWeight: '500', 
+                    color: 'white',
+                    marginBottom: '0.25rem',
+                  }}>
                     🔁 Repeat Weekly
                   </div>
-                  <div className="text-xs text-gray-500 mt-0.5">
+                  <div style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>
                     Create recurring tasks automatically
                   </div>
                 </div>
@@ -344,14 +543,38 @@ export default function TaskForm({
               
               {isRecurring && (
                 <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #374151' }}>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    color: '#D1D5DB',
+                    marginBottom: '0.5rem',
+                  }}>
                     Repeat Until
                   </label>
                   <input
                     type="date"
                     value={recurringEndDate}
                     onChange={(e) => setRecurringEndDate(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      background: 'rgba(17, 24, 39, 0.8)',
+                      border: '2px solid #374151',
+                      borderRadius: '8px',
+                      color: 'white',
+                      fontSize: '0.875rem',
+                      outline: 'none',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#3B82F6';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#374151';
+                      e.target.style.boxShadow = 'none';
+                    }}
                   />
                 </div>
               )}
@@ -359,17 +582,49 @@ export default function TaskForm({
           )}
           
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label style={{
+              display: 'block',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              color: '#D1D5DB',
+              marginBottom: '0.5rem',
+            }}>
               Due Date <span style={{ color: '#EF4444' }}>*</span>
             </label>
             <input
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-900 border-2 border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              style={{
+                width: '100%',
+                padding: '0.75rem 1rem',
+                background: 'rgba(17, 24, 39, 0.8)',
+                border: '2px solid #374151',
+                borderRadius: '8px',
+                color: 'white',
+                fontSize: '0.875rem',
+                outline: 'none',
+                transition: 'all 0.2s ease',
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#3B82F6';
+                e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#374151';
+                e.target.style.boxShadow = 'none';
+              }}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              📍 Final deadline for this task
+            <p style={{
+              fontSize: '0.75rem',
+              color: '#9CA3AF',
+              marginTop: '0.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.25rem',
+            }}>
+              <span>📍</span>
+              <span>Final deadline for this task</span>
             </p>
           </div>
         </section>
@@ -378,34 +633,69 @@ export default function TaskForm({
       {/* フッター（固定ボタン） */}
       <div style={{ 
         padding: '1.5rem',
-        borderTop: '1px solid #374151',
+        borderTop: '1px solid rgba(55, 65, 81, 0.5)',
         position: 'sticky',
         bottom: 0,
-        backgroundColor: '#1F2937',
+        background: 'linear-gradient(to right, rgba(31, 41, 55, 0.98), rgba(17, 24, 39, 0.98))',
+        backdropFilter: 'blur(10px)',
         display: 'flex',
-        gap: '0.75rem'
+        gap: '0.75rem',
+        borderBottomLeftRadius: '16px',
+        borderBottomRightRadius: '16px',
       }}>
         <button
           type="submit"
-          className="flex-1 py-3 px-6 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+          style={{
+            flex: 1,
+            padding: '0.875rem 1.5rem',
+            background: 'linear-gradient(135deg, #10B981, #059669)',
+            color: 'white',
+            borderRadius: '10px',
+            fontWeight: '600',
+            fontSize: '0.875rem',
+            transition: 'all 0.2s ease',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.02)';
+            e.currentTarget.style.boxShadow = '0 6px 16px rgba(16, 185, 129, 0.5)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.4)';
+          }}
         >
-          {isEditMode ? (
-            <>
-              <span>💾</span>
-              <span>Save Changes</span>
-            </>
-          ) : (
-            <>
-              <span>✨</span>
-              <span>Create Task</span>
-            </>
-          )}
+          <span style={{ fontSize: '1.25rem' }}>{isEditMode ? '💾' : '✨'}</span>
+          <span>{isEditMode ? 'Save Changes' : 'Create Task'}</span>
         </button>
         {onCancel && (
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 py-3 px-6 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-all"
+            style={{
+              flex: 1,
+              padding: '0.875rem 1.5rem',
+              background: 'rgba(55, 65, 81, 0.8)',
+              color: 'white',
+              borderRadius: '10px',
+              fontWeight: '600',
+              fontSize: '0.875rem',
+              transition: 'all 0.2s ease',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(75, 85, 99, 0.9)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(55, 65, 81, 0.8)';
+            }}
           >
             Cancel
           </button>

@@ -139,13 +139,6 @@ export default function MemberList({
                           </span>
                         )}
                       </div>
-                      <div style={{
-                        fontSize: '0.75rem',
-                        color: '#9CA3AF',
-                        marginTop: '0.125rem',
-                      }}>
-                        {member}
-                      </div>
                     </div>
                   </div>
 

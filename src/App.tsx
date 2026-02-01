@@ -9,16 +9,15 @@ import NetworkSelector from './components/NetworkSelector';
 import ConnectionDebugger from './components/ConnectionDebugger';
 import { generateRecurringTasks } from './lib/recurringTasks';
 import CompleteTaskModal from './components/CompleteTaskModal';
-import { Task, Project, TaskStatus } from './lib/types';
+import { Task, Project, TaskStatus, FilterType } from './lib/types';
 import { storage } from './lib/storage';
 import TaskTable from './components/TaskTable';
 import GanttCharrt from './components/GanttChart';
-
-type FilterType = 'all' | 'today' | 'pending' | 'in-progress' | 'completed' | 'myTasks' | 'unassigned' | 'byMember';
+import { TaskFilterBar } from './components/TaskFilterBar'; // ← インポート（既存）
 
 // Phase 1: テスト用メンバーアドレス
 const SAMPLE_MEMBERS = [
-  '0xd07c64dd6e6866e4386fc5708989dfe76b15c85ad755373f6c85bfb8a1c94dd0', // あなたのウォレット
+  '0xd07c64dd6e6866e4386fc5708989dfe76b15c85ad755373f6c85bfb8a1c94dd0',
   '0x1234567890abcdef1234567890abcdef12345678',
   '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd',
 ];
@@ -27,7 +26,6 @@ function App() {
   const [project, setProject] = useState<Project>(() => {
     const stored = storage.getProject();
     
-    // Phase 1: メンバーが未設定の場合、テスト用メンバーを初期化
     if (!stored.members || stored.members.length === 0) {
       const initialProject: Project = {
         ...stored,
@@ -120,9 +118,6 @@ function App() {
       return;
     }
 
-    console.log('Account:', account);
-    console.log('Account Address:', account.address);
-
     if (!account.address) {
       alert('❌ Wallet address not found. Please reconnect your wallet.');
       return;
@@ -190,7 +185,8 @@ function App() {
     return a.dueDate - b.dueDate;
   });
 
-  const filterCounts: Record<FilterType, number> = {
+  // ✅ filterCounts を計算（TaskFilterBar に渡すため）
+  const filterCounts: Record<string, number> = {
     all: tasks.length,
     today: tasks.filter((t) => {
       const today = new Date().setHours(0, 0, 0, 0);
@@ -205,6 +201,14 @@ function App() {
     byMember: selectedMemberFilter
       ? tasks.filter((t) => t.assignedTo === selectedMemberFilter).length
       : 0,
+
+  // ✅ メンバーごとのタスク数も計算
+  ...Object.fromEntries(
+    (project.members || []).map((member) => [
+      member,
+      tasks.filter((t) => t.assignedTo === member).length,
+    ])
+  ),
   };
 
   const completingTask = completingTaskId ? tasks.find((t) => t.id === completingTaskId) : null;
@@ -255,31 +259,14 @@ function App() {
 
           <GanttCharrt tasks={tasks} />
 
-          <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            {(['all', 'today', 'pending', 'in-progress', 'completed'] as FilterType[]).map((f) => (
-              <button
-                key={f}
-                onClick={() => {
-                  console.log('🔷 Filter changed to:', f);
-                  handleFilterChange(f);
-                }}
-                style={{
-                  padding: '0.5rem 1rem',
-                  borderRadius: '0.5rem',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  backgroundColor: filter === f ? '#2563EB' : '#374151',
-                  color: 'white',
-                  transition: 'all 0.2s',
-                }}
-              >
-                {f === 'all' ? 'All' : f === 'today' ? 'Today' : f === 'in-progress' ? 'In Progress' : f.charAt(0).toUpperCase() + f.slice(1)}
-                <span style={{ marginLeft: '0.25rem', opacity: 0.7 }}>({filterCounts[f]})</span>
-              </button>
-            ))}
-          </div>
+          {/* ✅ Phase 1: TaskFilterBar を統合 */}
+          <TaskFilterBar
+            currentFilter={filter}
+            members={project.members || []}
+            selectedMember={selectedMemberFilter}
+            filterCounts={filterCounts}
+            onFilterChange={handleFilterChange}
+          />
 
           <div>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: 'white' }}>

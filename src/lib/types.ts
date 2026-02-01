@@ -1,6 +1,7 @@
 export type Priority = 'low' | 'medium' | 'high' | 'urgent';
 export type TaskStatus = 'pending' | 'in-progress' | 'completed';
 export type RecurringPattern = 'weekly'; // MVPは毎週のみ
+export type FilterType = 'all' | 'today' | 'pending' | 'in-progress' | 'completed' | 'myTasks' | 'unassigned' | 'byMember'; // ← 追加
 
 export interface Task {
   id: string;
@@ -69,14 +70,3 @@ export interface GanttChartData {
   minDate: number;
   maxDate: number;
 }
-
-
-// export interface TaskContribution {
-//     taskId: string;
-//     taskTitle: string;
-//     V: number; //タスクの重要度スコア
-//     E: number; //タスクの効率度スコア
-//     T: number; //タスクの納期遵守スコア
-//     C: number; //タスクの完了度スコア
-//     contributionScore: number; //タスクの総合貢献度スコア V*E*T*C
-// }

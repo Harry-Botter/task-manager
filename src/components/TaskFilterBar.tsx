@@ -1,17 +1,11 @@
 import { useState, useRef, useEffect } from "react";
-
-type FilterType = 'all' | 'myTasks' | 'unassigned' | 'byMember';
+import { FilterType } from "../lib/types";
 
 interface TaskFilterBarProps {
     currentFilter: FilterType;
     members: string[];
     selectedMember?: string | null;
-    filterCounts: {
-        all: number;
-        myTasks: number;
-        unassigned: number;
-        [key: string]: number
-    };
+    filterCounts: Record<string, number>;
     onFilterChange: (filter: FilterType, member?: string) => void;
 }
 
@@ -49,105 +43,304 @@ export const TaskFilterBar = ({
   };
 
   return (
-    <div className="bg-gray-900 border-b border-gray-700 p-4 mb-6">
-      <div className="flex flex-wrap items-center gap-2">
+    <div style={{
+      background: 'linear-gradient(to bottom, rgba(17, 24, 39, 0.95), rgba(31, 41, 55, 0.95))',
+      backdropFilter: 'blur(10px)',
+      borderRadius: '12px',
+      padding: '1rem',
+      marginBottom: '1.5rem',
+      border: '1px solid rgba(55, 65, 81, 0.5)',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)',
+    }}>
+      {/* 1段のタブバー */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        flexWrap: 'nowrap',
+      }}>
         {/* All Tasks タブ */}
         <button
           onClick={() => handleFilterSelect('all')}
-          className={`
-            px-4 py-2 rounded-lg font-medium transition-colors
-            ${
-              currentFilter === 'all'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+          style={{
+            padding: '0.625rem 1.25rem',
+            borderRadius: '8px',
+            fontWeight: '600',
+            transition: 'all 0.2s ease',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            whiteSpace: 'nowrap',
+            background: currentFilter === 'all'
+             ? 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
+             : 'rgba(31, 41, 55, 0.8)',
+            color: currentFilter === 'all' ? 'white' : '#D1D5DB',
+            boxShadow: currentFilter === 'all'
+             ? '0 4px 12px rgba(59, 130, 246, 0.4)'
+             : 'none',
+          }}
+          onMouseEnter={(e) => {
+            if (currentFilter !== 'all') {
+              e.currentTarget.style.background = 'rgba(55, 65, 81, 0.9)';
             }
-          `}
+          }}
+          onMouseLeave={(e) => {
+            if (currentFilter !== 'all') {
+              e.currentTarget.style.background = 'rgba(31, 41, 55, 0.8)';
+            }
+          }}
         >
-          📋 All Tasks <span className="ml-1 text-sm">({filterCounts.all})</span>
+          <span>📋</span>
+          <span>All Tasks</span>
+          <span style={{
+            fontSize: '0.75rem',
+            padding: '0.125rem 0.5rem',
+            borderRadius: '9999px',
+            background: currentFilter === 'all'
+             ? 'rgba(255, 255, 255, 0.2)'
+             : 'rgba(17, 24, 39, 0.6)',
+          }}>
+            {filterCounts.all}
+          </span>
         </button>
 
         {/* My Tasks タブ */}
         <button
           onClick={() => handleFilterSelect('myTasks')}
-          className={`
-            px-4 py-2 rounded-lg font-medium transition-colors
-            ${
-              currentFilter === 'myTasks'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+          style={{
+            padding: '0.625rem 1.25rem',
+            borderRadius: '8px',
+            fontWeight: '600',
+            transition: 'all 0.2s ease',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            whiteSpace: 'nowrap',
+            background: currentFilter === 'myTasks'
+             ? 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
+             : 'rgba(31, 41, 55, 0.8)',
+            color: currentFilter === 'myTasks' ? 'white' : '#D1D5DB',
+            boxShadow: currentFilter === 'myTasks'
+             ? '0 4px 12px rgba(59, 130, 246, 0.4)'
+             : 'none',
+          }}
+          onMouseEnter={(e) => {
+            if (currentFilter !== 'myTasks') {
+              e.currentTarget.style.background = 'rgba(55, 65, 81, 0.9)';
             }
-          `}
-        >
-          👤 My Tasks <span className="ml-1 text-sm">({filterCounts.myTasks})</span>
+          }}
+          onMouseLeave={(e) => {
+            if (currentFilter !== 'myTasks') {
+              e.currentTarget.style.background = 'rgba(31, 41, 55, 0.8)';
+            }
+          }}
+         >
+          <span>👤</span>
+          <span>My Tasks</span>
+          <span style={{
+            fontSize: '0.75rem',
+            padding: '0.125rem 0.5rem',
+            borderRadius: '9999px',
+            background: currentFilter === 'myTasks'
+             ? 'rgba(255, 255, 255, 0.2)'
+             : 'rgba(17, 24, 39, 0.6)',
+          }}>
+            {filterCounts.myTasks}
+          </span>
         </button>
 
         {/* Unassigned タブ */}
         <button
           onClick={() => handleFilterSelect('unassigned')}
-          className={`
-            px-4 py-2 rounded-lg font-medium transition-colors
-            ${
-              currentFilter === 'unassigned'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+          style={{
+            padding: '0.625rem 1.25rem',
+            borderRadius: '8px',
+            fontWeight: '600',
+            fontSize: '0.875rem',
+            transition: 'all 0.2s ease',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            whiteSpace: 'nowrap',
+            background: currentFilter === 'unassigned'
+             ? 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
+             : 'rgba(31, 41, 55, 0.8)',
+            color: currentFilter === 'unassigned' ? 'white' : '#D1D5DB',
+            boxShadow: currentFilter === 'unassigned'
+             ? '0 4px 12px rgba(59, 130, 246, 0.4)'
+             : 'none',
+          }}
+          onMouseEnter={(e) => {
+            if (currentFilter !== 'unassigned') {
+              e.currentTarget.style.background = 'rgba(55, 65, 81, 0.9)';
             }
-          `}
-        >
-          ✨ Unassigned <span className="ml-1 text-sm">({filterCounts.unassigned})</span>
+          }}
+          onMouseLeave={(e) => {
+            if (currentFilter !== 'unassigned') {
+              e.currentTarget.style.background = 'rgba(31, 41, 55, 0.8)';
+            }
+          }}
+         >
+          <span>✨</span>
+          <span>Unassigned</span>
+          <span style={{
+            fontSize: '0.75rem',
+            padding: '0.125rem 0.5rem',
+            borderRadius: '9999px',
+            background: currentFilter === 'unassigned'
+             ? 'rgba(255, 255, 255, 0.2)'
+             : 'rgba(17, 24, 39, 0.6)',
+          }}>
+            {filterCounts.unassigned}
+          </span>
         </button>
 
-        {/* By Member ドロップダウン */}
-        <div className="relative" ref={dropdownRef}>
+        {/* Member Filter Dropdown */}
+        <div style={{position: 'relative'}} ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className={`
-              px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2
-              ${
-                currentFilter === 'byMember'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+            style={{
+              padding: '0.625rem 1.25rem',
+              borderRadius: '8px',
+              fontWeight: '600',
+              fontSize: '0.875rem',
+              transition: 'all 0.2s ease',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              whiteSpace: 'nowrap',
+              background: currentFilter === 'byMember'
+              ? 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
+              : 'rgba(31, 41, 55, 0.8)',
+              color: currentFilter === 'byMember' ? 'white' : '#D1D5DB',
+              boxShadow: currentFilter === 'byMember'
+              ? '0 4px 12px rgba(59, 130, 246, 0.4)'
+              : 'none',
+            }}
+            onMouseEnter={(e) => {
+              if (currentFilter !== 'byMember') {
+                e.currentTarget.style.background = 'rgba(55, 65, 81, 0.9)';
               }
-            `}
-          >
-            <span>👥 By Member</span>
-            {selectedMember && <span className="text-sm">({truncateAddress(selectedMember)})</span>}
-            <svg
-              className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
+            }}
+            onMouseLeave={(e) => {
+              if (currentFilter !== 'byMember') {
+                e.currentTarget.style.background = 'rgba(31, 41, 55, 0.8)';
+              }
+            }}
+           >
+            <span>👥</span>
+            <span>By Member</span>
+            {selectedMember && (
+              <span style={{
+              fontSize: '0.75rem',
+              padding: '0.125rem 0.5rem',
+              borderRadius: '9999px',
+              background: 'rgba(255, 255, 255, 0.2)',
+            }}>
+              {truncateAddress(selectedMember)}
+            </span>
+           )}
+           <svg style={{
+            width: '1rem',
+            height: '1rem',
+            transition: 'transform 0.2s ease',
+            transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+           }}
+           fill='none'
+           stroke="currentColor"
+           viewBox="0 0 24 24"
+           >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+           </svg>
           </button>
 
           {/* メンバー選択ドロップダウン */}
           {isDropdownOpen && (
-            <div className="absolute z-50 top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg w-56">
+            <div style={{
+              position: 'absolute',
+              zIndex: 50,
+              top: 'calc(100% + 0.5rem)',
+              left: 0,
+              minWidth: '240px',
+              background: 'linear-gradient(to bottom, rgba(31, 41, 55, 0.98), rgba(17, 24, 39, 0.98))',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(75, 85, 99, 0.5)',
+              borderRadius: '10px',
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              overflow: 'hidden',
+            }}>
               {members.length > 0 ? (
-                members.map((member) => {
+                members.map((member, index) => {
                   const memberTaskCount = filterCounts[member] || 0;
+                  const isSelected = selectedMember === member;
                   return (
                     <button
                       key={member}
                       onClick={() => handleFilterSelect('byMember', member)}
-                      className={`
-                        w-full px-4 py-2 text-left text-sm transition-colors
-                        hover:bg-gray-700
-                        ${selectedMember === member ? 'bg-blue-600 text-white' : 'text-gray-300'}
-                        ${members.indexOf(member) < members.length - 1 ? 'border-b border-gray-700' : ''}
-                      `}
                       title={member}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        textAlign: 'left',
+                        fontSize: '0.875rem',
+                        transition: 'all 0.15s ease',
+                        border: 'none',
+                        borderBottom: index < members.length - 1 ? '1px solid rgba(55, 65, 81, 0.5)' : 'none',
+                        cursor: 'pointer',
+                        background: isSelected 
+                          ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3))' 
+                          : 'transparent',
+                        color: isSelected ? 'white' : '#D1D5DB',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isSelected) {
+                          e.currentTarget.style.background = 'rgba(55, 65, 81, 0.6)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isSelected) {
+                          e.currentTarget.style.background = 'transparent';
+                        }
+                      }}
                     >
-                      <span className="flex justify-between items-center">
-                        <span>👤 {truncateAddress(member)}</span>
-                        <span className="text-xs opacity-75">({memberTaskCount})</span>
-                      </span>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span>👤</span>
+                          <span style={{ fontWeight: '500' }}>{truncateAddress(member)}</span>
+                        </span>
+                        <span style={{
+                          fontSize: '0.75rem',
+                          padding: '0.125rem 0.5rem',
+                          borderRadius: '9999px',
+                          background: isSelected 
+                            ? 'rgba(255, 255, 255, 0.2)' 
+                            : 'rgba(17, 24, 39, 0.6)',
+                        }}>
+                          {memberTaskCount}
+                        </span>
+                      </div>
                     </button>
                   );
                 })
               ) : (
-                <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                <div style={{
+                  padding: '1rem',
+                  textAlign: 'center',
+                  fontSize: '0.875rem',
+                  color: '#9CA3AF',
+                }}>
                   No members available
                 </div>
               )}
@@ -157,22 +350,46 @@ export const TaskFilterBar = ({
       </div>
 
       {/* フィルター情報表示 */}
-      <div className="mt-3 text-xs text-gray-500">
-        {currentFilter === 'all' && '全てのタスクを表示中'}
-        {currentFilter === 'myTasks' && 'あなたに割り当てられたタスクを表示中'}
-        {currentFilter === 'unassigned' && '未割り当てのタスクを表示中'}
-        {currentFilter === 'byMember' && selectedMember && (
-          <>
-            <span>{truncateAddress(selectedMember)} に割り当てられたタスクを表示中</span>
-            <button
-              onClick={() => handleFilterSelect('all')}
-              className="ml-2 text-blue-400 hover:text-blue-300 underline"
-            >
-              リセット
-            </button>
-          </>
-        )}
-      </div>
+      {(currentFilter === 'byMember' && selectedMember) && (
+        <div style={{
+          marginTop: '0.75rem',
+          paddingTop: '0.75rem',
+          borderTop: '1px solid rgba(55, 65, 81, 0.5)',
+          fontSize: '0.8125rem',
+          color: '#9CA3AF',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+          <span>
+            Showing tasks for <span style={{ color: '#60A5FA', fontWeight: '600' }}>{truncateAddress(selectedMember)}</span>
+          </span>
+          <button
+            onClick={() => handleFilterSelect('all')}
+            style={{
+              padding: '0.25rem 0.75rem',
+              borderRadius: '6px',
+              fontSize: '0.75rem',
+              fontWeight: '600',
+              border: 'none',
+              cursor: 'pointer',
+              background: 'rgba(59, 130, 246, 0.2)',
+              color: '#60A5FA',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)';
+              e.currentTarget.style.color = '#93C5FD';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)';
+              e.currentTarget.style.color = '#60A5FA';
+            }}
+          >
+            Clear Filter
+          </button>
+        </div>
+      )}
     </div>
   );
 };

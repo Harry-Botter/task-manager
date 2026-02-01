@@ -47,10 +47,17 @@ export default function MemberSelector({
   };
 
   const displayValue = value ? truncateAddress(value) : 'Unassigned';
+  const displayIcon = value ? '👤' : '✨';
 
   return (
-    <div className="relative w-full" ref={dropdownRef}>
-      <label className="block text-sm font-medium text-gray-300 mb-2">
+    <div style={{ position: 'relative', width: '100%' }} ref={dropdownRef}>
+      <label style={{
+        display: 'block',
+        fontSize: '0.875rem',
+        fontWeight: '500',
+        color: '#D1D5DB',
+        marginBottom: '0.5rem',
+      }}>
         {label}
       </label>
 
@@ -59,41 +66,103 @@ export default function MemberSelector({
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
-        className={`
-          w-full px-3 py-2 text-left rounded-md border
-          bg-gray-800 border-gray-600 text-gray-100
-          hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500
-          transition-colors flex justify-between items-center
-          ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-        `}
+        style={{
+          width: '100%',
+          padding: '0.75rem 1rem',
+          textAlign: 'left',
+          borderRadius: '8px',
+          border: '2px solid',
+          borderColor: isOpen ? '#3B82F6' : '#374151',
+          background: 'linear-gradient(to bottom, rgba(31, 41, 55, 0.95), rgba(17, 24, 39, 0.95))',
+          color: '#F9FAFB',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          opacity: disabled ? 0.5 : 1,
+          transition: 'all 0.2s ease',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          outline: 'none',
+          fontWeight: '500',
+        }}
+        onMouseEnter={(e) => {
+          if (!disabled && !isOpen) {
+            e.currentTarget.style.borderColor = '#4B5563';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!disabled && !isOpen) {
+            e.currentTarget.style.borderColor = '#374151';
+          }
+        }}
       >
-        <span>{displayValue}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={{ fontSize: '1rem' }}>{displayIcon}</span>
+          <span>{displayValue}</span>
+        </span>
         <svg
-          className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          style={{
+            width: '1rem',
+            height: '1rem',
+            transition: 'transform 0.2s ease',
+            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+          }}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
       {/* ドロップダウンメニュー */}
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-md shadow-lg">
+        <div style={{
+          position: 'absolute',
+          zIndex: 50,
+          width: '100%',
+          marginTop: '0.5rem',
+          background: 'linear-gradient(to bottom, rgba(31, 41, 55, 0.98), rgba(17, 24, 39, 0.98))',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(75, 85, 99, 0.5)',
+          borderRadius: '10px',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+          overflow: 'hidden',
+        }}>
           {/* Unassigned オプション */}
           {allowUnassigned && (
             <button
               type="button"
               onClick={() => handleSelect(null)}
-              className={`
-                w-full px-3 py-2 text-left text-sm
-                hover:bg-gray-700 transition-colors
-                ${value === null ? 'bg-blue-600 text-white' : 'text-gray-300'}
-                border-b border-gray-700
-              `}
+              style={{
+                width: '100%',
+                padding: '0.75rem 1rem',
+                textAlign: 'left',
+                fontSize: '0.875rem',
+                transition: 'all 0.15s ease',
+                border: 'none',
+                borderBottom: '1px solid rgba(55, 65, 81, 0.5)',
+                cursor: 'pointer',
+                background: value === null 
+                  ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3))' 
+                  : 'transparent',
+                color: value === null ? 'white' : '#D1D5DB',
+                fontWeight: value === null ? '600' : '400',
+              }}
+              onMouseEnter={(e) => {
+                if (value !== null) {
+                  e.currentTarget.style.background = 'rgba(55, 65, 81, 0.6)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (value !== null) {
+                  e.currentTarget.style.background = 'transparent';
+                }
+              }}
             >
-              ✨ Unassigned
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span>✨</span>
+                <span>Unassigned</span>
+              </span>
             </button>
           )}
 
@@ -104,30 +173,50 @@ export default function MemberSelector({
                 key={member}
                 type="button"
                 onClick={() => handleSelect(member)}
-                className={`
-                  w-full px-3 py-2 text-left text-sm
-                  hover:bg-gray-700 transition-colors
-                  ${value === member ? 'bg-blue-600 text-white' : 'text-gray-300'}
-                  ${index < members.length - 1 ? 'border-b border-gray-700' : ''}
-                `}
                 title={member}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  textAlign: 'left',
+                  fontSize: '0.875rem',
+                  transition: 'all 0.15s ease',
+                  border: 'none',
+                  borderBottom: index < members.length - 1 ? '1px solid rgba(55, 65, 81, 0.5)' : 'none',
+                  cursor: 'pointer',
+                  background: value === member 
+                    ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3))' 
+                    : 'transparent',
+                  color: value === member ? 'white' : '#D1D5DB',
+                  fontWeight: value === member ? '600' : '400',
+                }}
+                onMouseEnter={(e) => {
+                  if (value !== member) {
+                    e.currentTarget.style.background = 'rgba(55, 65, 81, 0.6)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (value !== member) {
+                    e.currentTarget.style.background = 'transparent';
+                  }
+                }}
               >
-                👤 {truncateAddress(member)}
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>👤</span>
+                  <span>{truncateAddress(member)}</span>
+                </span>
               </button>
             ))
           ) : (
-            <div className="px-3 py-2 text-sm text-gray-500 text-center">
+            <div style={{
+              padding: '1rem',
+              textAlign: 'center',
+              fontSize: '0.875rem',
+              color: '#9CA3AF',
+            }}>
               No members available
             </div>
           )}
         </div>
-      )}
-
-      {/* フルアドレス表示（オプション） */}
-      {value && (
-        <p className="text-xs text-gray-500 mt-1 break-all">
-          {value}
-        </p>
       )}
     </div>
   );

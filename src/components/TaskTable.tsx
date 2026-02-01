@@ -22,18 +22,6 @@ export default function TaskTable({ tasks, onComplete, onEdit, onDelete, onStatu
     urgent: '#EF4444',
   };
 
-  const statusIcons = {
-    pending: '⏸️',
-    'in-progress': '🔵',
-    completed: '✅',
-  };
-
-  const statusLabels = {
-    pending: 'Pending',
-    'in-progress': 'In Progress',
-    completed: 'Completed',
-  };
-
   const getEfficiencyDisplay = (task: Task): { percentage: string; diff: string; color: string; emoji: string } => {
     if (!task.actualTime || task.status !== 'completed') {
       return { percentage: '-', diff: '', color: '#6B7280', emoji: '' };
@@ -109,7 +97,6 @@ export default function TaskTable({ tasks, onComplete, onEdit, onDelete, onStatu
             <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: '#9CA3AF', width: '100px' }}>
               Priority
             </th>
-            {/* Phase 1: 「Assigned To」列追加 */}
             <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: '#9CA3AF', width: '120px' }}>
               Assigned To
             </th>
