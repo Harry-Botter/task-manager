@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { FilterType } from "../lib/types";
+import { truncateAddress, addressesEqual } from "../lib/utils";
 
 interface TaskFilterBarProps {
     currentFilter: FilterType;
@@ -9,12 +10,6 @@ interface TaskFilterBarProps {
     onFilterChange: (filter: FilterType, member?: string) => void;
     currentUserAddress?: string;
 }
-
-/* ウォレットアドレスを短縮形で表示 */
-const truncateAddress = (address: string): string => {
-    if(!address || address.length < 10) return address;
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-};
 
 export const TaskFilterBar = ({
     currentFilter,
@@ -44,6 +39,7 @@ export const TaskFilterBar = ({
     setIsDropdownOpen(false);
   };
 
+  // ウォレット未接続の判定
   const isWalletConnected = !!currentUserAddress;
 
   return (
@@ -70,6 +66,7 @@ export const TaskFilterBar = ({
             padding: '0.625rem 1.25rem',
             borderRadius: '8px',
             fontWeight: '600',
+            fontSize: '0.875rem',
             transition: 'all 0.2s ease',
             border: 'none',
             cursor: 'pointer',
@@ -77,13 +74,13 @@ export const TaskFilterBar = ({
             alignItems: 'center',
             gap: '0.5rem',
             whiteSpace: 'nowrap',
-            background: currentFilter === 'all'
-             ? 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
-             : 'rgba(31, 41, 55, 0.8)',
+            background: currentFilter === 'all' 
+              ? 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
+              : 'rgba(31, 41, 55, 0.8)',
             color: currentFilter === 'all' ? 'white' : '#D1D5DB',
-            boxShadow: currentFilter === 'all'
-             ? '0 4px 12px rgba(59, 130, 246, 0.4)'
-             : 'none',
+            boxShadow: currentFilter === 'all' 
+              ? '0 4px 12px rgba(59, 130, 246, 0.4)' 
+              : 'none',
           }}
           onMouseEnter={(e) => {
             if (currentFilter !== 'all') {
@@ -102,20 +99,20 @@ export const TaskFilterBar = ({
             fontSize: '0.75rem',
             padding: '0.125rem 0.5rem',
             borderRadius: '9999px',
-            background: currentFilter === 'all'
-             ? 'rgba(255, 255, 255, 0.2)'
-             : 'rgba(17, 24, 39, 0.6)',
+            background: currentFilter === 'all' 
+              ? 'rgba(255, 255, 255, 0.2)' 
+              : 'rgba(17, 24, 39, 0.6)',
           }}>
             {filterCounts.all}
           </span>
         </button>
 
-        {/* My Tasks タブ */}
+        {/* My Tasks タブ - ウォレット未接続時はクリックで説明表示 */}
         <button
           onClick={() => {
             if (!isWalletConnected) {
               alert('⚠️ Please connect your wallet to use "My Tasks" filter');
-              return
+              return;
             }
             handleFilterSelect('myTasks');
           }}
@@ -131,16 +128,16 @@ export const TaskFilterBar = ({
             alignItems: 'center',
             gap: '0.5rem',
             whiteSpace: 'nowrap',
-            background: currentFilter === 'myTasks'
-             ? 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
-             : isWalletConnected
-              ? 'rgba(31, 41, 55, 0.8)'
-              : 'rgba(55, 65, 81, 0.4)',
+            background: currentFilter === 'myTasks' 
+              ? 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
+              : isWalletConnected 
+                ? 'rgba(31, 41, 55, 0.8)'
+                : 'rgba(55, 65, 81, 0.4)',
             color: isWalletConnected ? (currentFilter === 'myTasks' ? 'white' : '#D1D5DB') : '#6B7280',
-            boxShadow: currentFilter === 'myTasks'
-             ? '0 4px 12px rgba(59, 130, 246, 0.4)'
-             : 'none',
-            filter: isWalletConnected ? 'none' : 'grayscale(100%)'
+            boxShadow: currentFilter === 'myTasks' 
+              ? '0 4px 12px rgba(59, 130, 246, 0.4)' 
+              : 'none',
+            filter: isWalletConnected ? 'none' : 'grayscale(100%)',
           }}
           onMouseEnter={(e) => {
             if (isWalletConnected && currentFilter !== 'myTasks') {
@@ -156,7 +153,7 @@ export const TaskFilterBar = ({
               e.currentTarget.style.background = 'rgba(55, 65, 81, 0.4)';
             }
           }}
-         >
+        >
           {isWalletConnected ? <span>👤</span> : <span>🔒</span>}
           <span>My Tasks</span>
           <span style={{
@@ -186,13 +183,13 @@ export const TaskFilterBar = ({
             alignItems: 'center',
             gap: '0.5rem',
             whiteSpace: 'nowrap',
-            background: currentFilter === 'unassigned'
-             ? 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
-             : 'rgba(31, 41, 55, 0.8)',
+            background: currentFilter === 'unassigned' 
+              ? 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
+              : 'rgba(31, 41, 55, 0.8)',
             color: currentFilter === 'unassigned' ? 'white' : '#D1D5DB',
-            boxShadow: currentFilter === 'unassigned'
-             ? '0 4px 12px rgba(59, 130, 246, 0.4)'
-             : 'none',
+            boxShadow: currentFilter === 'unassigned' 
+              ? '0 4px 12px rgba(59, 130, 246, 0.4)' 
+              : 'none',
           }}
           onMouseEnter={(e) => {
             if (currentFilter !== 'unassigned') {
@@ -204,23 +201,23 @@ export const TaskFilterBar = ({
               e.currentTarget.style.background = 'rgba(31, 41, 55, 0.8)';
             }
           }}
-         >
+        >
           <span>✨</span>
           <span>Unassigned</span>
           <span style={{
             fontSize: '0.75rem',
             padding: '0.125rem 0.5rem',
             borderRadius: '9999px',
-            background: currentFilter === 'unassigned'
-             ? 'rgba(255, 255, 255, 0.2)'
-             : 'rgba(17, 24, 39, 0.6)',
+            background: currentFilter === 'unassigned' 
+              ? 'rgba(255, 255, 255, 0.2)' 
+              : 'rgba(17, 24, 39, 0.6)',
           }}>
             {filterCounts.unassigned}
           </span>
         </button>
 
-        {/* Member Filter Dropdown */}
-        <div style={{position: 'relative'}} ref={dropdownRef}>
+        {/* By Member ドロップダウン */}
+        <div style={{ position: 'relative' }} ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             style={{
@@ -235,13 +232,13 @@ export const TaskFilterBar = ({
               alignItems: 'center',
               gap: '0.5rem',
               whiteSpace: 'nowrap',
-              background: currentFilter === 'byMember'
-              ? 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
-              : 'rgba(31, 41, 55, 0.8)',
+              background: currentFilter === 'byMember' 
+                ? 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
+                : 'rgba(31, 41, 55, 0.8)',
               color: currentFilter === 'byMember' ? 'white' : '#D1D5DB',
-              boxShadow: currentFilter === 'byMember'
-              ? '0 4px 12px rgba(59, 130, 246, 0.4)'
-              : 'none',
+              boxShadow: currentFilter === 'byMember' 
+                ? '0 4px 12px rgba(59, 130, 246, 0.4)' 
+                : 'none',
             }}
             onMouseEnter={(e) => {
               if (currentFilter !== 'byMember') {
@@ -253,31 +250,32 @@ export const TaskFilterBar = ({
                 e.currentTarget.style.background = 'rgba(31, 41, 55, 0.8)';
               }
             }}
-           >
+          >
             <span>👥</span>
             <span>By Member</span>
             {selectedMember && (
               <span style={{
-              fontSize: '0.75rem',
-              padding: '0.125rem 0.5rem',
-              borderRadius: '9999px',
-              background: 'rgba(255, 255, 255, 0.2)',
-            }}>
-              {truncateAddress(selectedMember)}
-            </span>
-           )}
-           <svg style={{
-            width: '1rem',
-            height: '1rem',
-            transition: 'transform 0.2s ease',
-            transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-           }}
-           fill='none'
-           stroke="currentColor"
-           viewBox="0 0 24 24"
-           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-           </svg>
+                fontSize: '0.75rem',
+                padding: '0.125rem 0.5rem',
+                borderRadius: '9999px',
+                background: 'rgba(255, 255, 255, 0.2)',
+              }}>
+                {truncateAddress(selectedMember)}
+              </span>
+            )}
+            <svg
+              style={{
+                width: '1rem',
+                height: '1rem',
+                transition: 'transform 0.2s ease',
+                transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+              }}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
           </button>
 
           {/* メンバー選択ドロップダウン */}
@@ -288,8 +286,8 @@ export const TaskFilterBar = ({
               top: 'calc(100% + 0.5rem)',
               left: 0,
               minWidth: '240px',
-              maxHeight: '300px',
-              overflowY: 'auto',
+              maxHeight: '300px', // ← スクロール対応
+              overflowY: 'auto',  // ← スクロール対応
               background: 'linear-gradient(to bottom, rgba(31, 41, 55, 0.98), rgba(17, 24, 39, 0.98))',
               backdropFilter: 'blur(10px)',
               border: '1px solid rgba(75, 85, 99, 0.5)',
@@ -300,7 +298,7 @@ export const TaskFilterBar = ({
               {members.length > 0 ? (
                 members.map((member, index) => {
                   const memberTaskCount = filterCounts[member] || 0;
-                  const isSelected = selectedMember === member;
+                  const isSelected = addressesEqual(selectedMember, member);
                   return (
                     <button
                       key={member}

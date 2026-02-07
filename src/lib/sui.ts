@@ -27,7 +27,7 @@ export async function mintProjectCompletionNFT({
   // アドレス確認
   console.log('🔍 Current Address:', currentAddress);
   console.log('📦 Package ID:', PACKAGE_ID);
-  
+
   if (!currentAddress) {
     throw new Error('❌ Wallet address is not available');
   }
@@ -38,7 +38,7 @@ export async function mintProjectCompletionNFT({
 
   try {
     const contribution = calculateContribution(tasks);
-    
+
     console.log('📊 Contribution Data:', {
       completedTasks: contribution.completedTasks,
       totalEstimatedTime: contribution.totalEstimatedTime,
@@ -52,17 +52,18 @@ export async function mintProjectCompletionNFT({
     const imageUrlBytes = new TextEncoder().encode(NFT_IMAGE_URL);
 
     // スマートコントラクト呼び出し
-    // 注意: entry関数なので戻り値はない
+    // ✅ 修正: recipient（受取人アドレス）を第1引数に追加
     tx.moveCall({
       target: `${PACKAGE_ID}::task_bomb::mint_project_completion_proof`,
       arguments: [
-        tx.pure.string(project.name),
-        tx.pure.u32(contribution.completedTasks),
-        tx.pure.u32(contribution.totalEstimatedTime),
-        tx.pure.u32(contribution.totalActualTime),
-        tx.pure.u64(Date.now()),
-        tx.pure.u16(Math.min(Math.round(contribution.contributionScore), 65535)),
-        tx.pure.vector('u8', Array.from(imageUrlBytes)),
+        tx.pure.address(currentAddress),                                      // 1. recipient (受取人)
+        tx.pure.string(project.name),                                         // 2. project_name
+        tx.pure.u32(contribution.completedTasks),                            // 3. completed_tasks
+        tx.pure.u32(contribution.totalEstimatedTime),                        // 4. total_estimated_time
+        tx.pure.u32(contribution.totalActualTime),                           // 5. total_actual_time
+        tx.pure.u64(Date.now()),                                             // 6. completed_at
+        tx.pure.u16(Math.min(Math.round(contribution.contributionScore), 65535)), // 7. contribution_score
+        tx.pure.vector('u8', Array.from(imageUrlBytes)),                     // 8. image_url
       ],
     });
 
@@ -74,15 +75,12 @@ export async function mintProjectCompletionNFT({
     });
 
     console.log('✅ Transaction successful:', result.digest);
-    
     return result.digest;
   } catch (error) {
     console.error('❌ NFT Minting Error:', error);
-    
     if (error instanceof Error) {
       throw new Error(`NFT mint failed: ${error.message}`);
     }
-    
     throw new Error('NFT mint failed: Unknown error');
   }
 }

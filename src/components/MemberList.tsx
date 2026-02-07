@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Task } from '../lib/types';
+import { truncateAddress, addressesEqual } from '../lib/utils';
 
 interface MemberListProps {
   members: string[];
@@ -7,14 +8,6 @@ interface MemberListProps {
   onAddMember: (address: string) => void;
   currentUserAddress?: string;
 }
-
-/**
- * ウォレットアドレスを短縮形で表示
- */
-const truncateAddress = (address: string): string => {
-  if (!address || address.length < 10) return address;
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
-};
 
 export default function MemberList({
   members,
@@ -27,41 +20,51 @@ export default function MemberList({
 
   /**
    * メンバーのタスク数を計算
+   * ✅ アドレス正規化を適用
    */
   const getMemberTaskCount = (memberAddress: string): number => {
-    return tasks.filter((t) => t.assignedTo === memberAddress).length;
+    return tasks.filter((t) => addressesEqual(t.assignedTo, memberAddress)).length;
   };
 
   /**
    * メンバー追加処理
+   * ✅ 入力検証を強化
    */
   const handleAddMember = () => {
-    const address = newMemberAddress.trim();
+    const trimmed = newMemberAddress.trim();
 
-    if (!address) {
+    // 1. 空チェック
+    if (!trimmed) {
       setError('Please enter an address');
       return;
     }
 
-    // Sui アドレス形式チェック（簡易版）
-    if (!address.startsWith('0x') || address.length < 42) {
-      setError('Invalid Sui address format');
+    // 2. Sui アドレス形式チェック（0x + 40~64文字の16進数）
+    if (!trimmed.startsWith('0x') || trimmed.length < 42) {
+      setError('Invalid address format. Expected: 0x + 40+ hex characters');
       return;
     }
 
-    // 既に存在するかチェック
-    if (members.includes(address)) {
-      setError('This member already exists');
+    // 3. 16進数チェック
+    if (!/^0x[0-9a-fA-F]{40,64}$/.test(trimmed)) {
+      setError('Invalid address. Must contain only hex characters (0-9, a-f)');
       return;
     }
 
-    // 現在のユーザーと同じ場合
-    if (currentUserAddress && address.toLowerCase() === currentUserAddress.toLowerCase()) {
+    // 4. 重複チェック（アドレス正規化して比較）
+    if (members.some(m => addressesEqual(m, trimmed))) {
+      setError('This member is already in the project');
+      return;
+    }
+
+    // 5. 現在のユーザーと同じ場合
+    if (currentUserAddress && addressesEqual(trimmed, currentUserAddress)) {
       setError('You cannot add yourself');
       return;
     }
 
-    onAddMember(address);
+    // OK: 追加処理
+    onAddMember(trimmed);
     setNewMemberAddress('');
     setError(null);
   };
@@ -100,7 +103,7 @@ export default function MemberList({
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
             {members.map((member) => {
               const taskCount = getMemberTaskCount(member);
-              const isCurrentUser = currentUserAddress && member.toLowerCase() === currentUserAddress.toLowerCase();
+              const isCurrentUser = addressesEqual(member, currentUserAddress);
 
               return (
                 <li
@@ -118,27 +121,25 @@ export default function MemberList({
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <span style={{ fontSize: '1rem' }}>👤</span>
-                    <div>
-                      <div style={{
-                        fontSize: '0.875rem',
-                        fontWeight: '500',
-                        color: 'white',
-                      }}>
-                        {truncateAddress(member)}
-                        {isCurrentUser && (
-                          <span style={{
-                            marginLeft: '0.5rem',
-                            padding: '0.125rem 0.5rem',
-                            backgroundColor: '#3B82F6',
-                            color: 'white',
-                            borderRadius: '0.25rem',
-                            fontSize: '0.65rem',
-                            fontWeight: '600',
-                          }}>
-                            YOU
-                          </span>
-                        )}
-                      </div>
+                    <div style={{
+                      fontSize: '0.875rem',
+                      fontWeight: '500',
+                      color: 'white',
+                    }}>
+                      {truncateAddress(member)}
+                      {isCurrentUser && (
+                        <span style={{
+                          marginLeft: '0.5rem',
+                          padding: '0.125rem 0.5rem',
+                          backgroundColor: '#3B82F6',
+                          color: 'white',
+                          borderRadius: '0.25rem',
+                          fontSize: '0.65rem',
+                          fontWeight: '600',
+                        }}>
+                          YOU
+                        </span>
+                      )}
                     </div>
                   </div>
 

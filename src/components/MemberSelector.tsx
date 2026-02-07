@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { truncateAddress, addressesEqual } from '../lib/utils';
 
 interface MemberSelectorProps {
   members: string[];
@@ -8,15 +9,6 @@ interface MemberSelectorProps {
   label?: string;
   disabled?: boolean;
 }
-
-/**
- * ウォレットアドレスを短縮形で表示
- * 例: 0x1234567890abcdef1234567890abcdef → 0x1234...cdef
- */
-const truncateAddress = (address: string): string => {
-  if (!address || address.length < 10) return address;
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
-};
 
 export default function MemberSelector({
   members,
@@ -142,11 +134,11 @@ export default function MemberSelector({
                 border: 'none',
                 borderBottom: '1px solid rgba(55, 65, 81, 0.5)',
                 cursor: 'pointer',
-                background: value === null 
+                background: !value
                   ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3))' 
                   : 'transparent',
-                color: value === null ? 'white' : '#D1D5DB',
-                fontWeight: value === null ? '600' : '400',
+                color: !value ? 'white' : '#D1D5DB',
+                fontWeight: !value ? '600' : '400',
               }}
               onMouseEnter={(e) => {
                 if (value !== null) {
@@ -168,44 +160,47 @@ export default function MemberSelector({
 
           {/* メンバーオプション */}
           {members.length > 0 ? (
-            members.map((member, index) => (
-              <button
-                key={member}
-                type="button"
-                onClick={() => handleSelect(member)}
-                title={member}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  textAlign: 'left',
-                  fontSize: '0.875rem',
-                  transition: 'all 0.15s ease',
-                  border: 'none',
-                  borderBottom: index < members.length - 1 ? '1px solid rgba(55, 65, 81, 0.5)' : 'none',
-                  cursor: 'pointer',
-                  background: value === member 
-                    ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3))' 
-                    : 'transparent',
-                  color: value === member ? 'white' : '#D1D5DB',
-                  fontWeight: value === member ? '600' : '400',
-                }}
-                onMouseEnter={(e) => {
-                  if (value !== member) {
-                    e.currentTarget.style.background = 'rgba(55, 65, 81, 0.6)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (value !== member) {
-                    e.currentTarget.style.background = 'transparent';
-                  }
-                }}
-              >
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>👤</span>
-                  <span>{truncateAddress(member)}</span>
-                </span>
-              </button>
-            ))
+            members.map((member, index) => {
+              const isSelected = addressesEqual(value, member);
+              return (
+                <button
+                  key={member}
+                  type="button"
+                  onClick={() => handleSelect(member)}
+                  title={member}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    textAlign: 'left',
+                    fontSize: '0.875rem',
+                    transition: 'all 0.15s ease',
+                    border: 'none',
+                    borderBottom: index < members.length - 1 ? '1px solid rgba(55, 65, 81, 0.5)' : 'none',
+                    cursor: 'pointer',
+                    background: isSelected
+                      ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3))' 
+                      : 'transparent',
+                    color: isSelected ? 'white' : '#D1D5DB',
+                    fontWeight: isSelected ? '600' : '400',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.background = 'rgba(55, 65, 81, 0.6)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.background = 'transparent';
+                    }
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span>👤</span>
+                    <span>{truncateAddress(member)}</span>
+                  </span>
+                </button>
+              );
+            })
           ) : (
             <div style={{
               padding: '1rem',

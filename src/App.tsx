@@ -13,7 +13,8 @@ import { Task, Project, TaskStatus, FilterType } from './lib/types';
 import { storage } from './lib/storage';
 import TaskTable from './components/TaskTable';
 import GanttCharrt from './components/GanttChart';
-import { TaskFilterBar } from './components/TaskFilterBar'; // ← インポート（既存）
+import { TaskFilterBar } from './components/TaskFilterBar';
+import { addressesEqual } from './lib/utils'; // ← 追加
 
 // Phase 1: テスト用メンバーアドレス
 const SAMPLE_MEMBERS = [
@@ -151,6 +152,7 @@ function App() {
 
   /**
    * タスクをフィルター条件に基づいて絞り込む
+   * ✅ アドレス正規化を適用
    */
   const getFilteredTasks = (): Task[] => {
     const today = new Date().setHours(0, 0, 0, 0);
@@ -169,11 +171,13 @@ function App() {
     } else if (filter === 'completed') {
       filtered = tasks.filter((t) => t.status === 'completed');
     } else if (filter === 'myTasks') {
-      filtered = tasks.filter((t) => t.assignedTo === account?.address);
+      // ✅ アドレス正規化を使用
+      filtered = tasks.filter((t) => addressesEqual(t.assignedTo, account?.address));
     } else if (filter === 'unassigned') {
       filtered = tasks.filter((t) => t.assignedTo === null);
     } else if (filter === 'byMember' && selectedMemberFilter) {
-      filtered = tasks.filter((t) => t.assignedTo === selectedMemberFilter);
+      // ✅ アドレス正規化を使用
+      filtered = tasks.filter((t) => addressesEqual(t.assignedTo, selectedMemberFilter));
     }
     
     return filtered;
@@ -185,7 +189,10 @@ function App() {
     return a.dueDate - b.dueDate;
   });
 
-  // ✅ filterCounts を計算（TaskFilterBar に渡すため）
+  /**
+   * ✅ filterCounts を計算（TaskFilterBar に渡すため）
+   * ✅ アドレス正規化を適用
+   */
   const filterCounts: Record<string, number> = {
     all: tasks.length,
     today: tasks.filter((t) => {
@@ -196,29 +203,35 @@ function App() {
     pending: tasks.filter((t) => t.status === 'pending').length,
     'in-progress': tasks.filter((t) => t.status === 'in-progress').length,
     completed: tasks.filter((t) => t.status === 'completed').length,
-    myTasks: tasks.filter((t) => t.assignedTo === account?.address).length,
+    // ✅ アドレス正規化を使用
+    myTasks: tasks.filter((t) => addressesEqual(t.assignedTo, account?.address)).length,
     unassigned: tasks.filter((t) => t.assignedTo === null).length,
     byMember: selectedMemberFilter
-      ? tasks.filter((t) => t.assignedTo === selectedMemberFilter).length
+      // ✅ アドレス正規化を使用
+      ? tasks.filter((t) => addressesEqual(t.assignedTo, selectedMemberFilter)).length
       : 0,
 
-  // ✅ メンバーごとのタスク数も計算
-  ...Object.fromEntries(
-    (project.members || []).map((member) => [
-      member,
-      tasks.filter((t) => t.assignedTo === member).length,
-    ])
-  ),
+    // ✅ メンバーごとのタスク数も計算（アドレス正規化を適用）
+    ...Object.fromEntries(
+      (project.members || []).map((member) => [
+        member,
+        tasks.filter((t) => addressesEqual(t.assignedTo, member)).length,
+      ])
+    ),
   };
 
   const completingTask = completingTaskId ? tasks.find((t) => t.id === completingTaskId) : null;
   const editingTask = editingTaskId ? tasks.find((t) => t.id === editingTaskId) : null;
 
+  /**
+   * フィルター変更ハンドラー
+   * ✅ ウォレット未接続時の防御を追加
+   */
   const handleFilterChange = (newFilter: FilterType, member?: string) => {
-    //My Tasksはウォレットが接続されていないと無効
+    // My Tasks はウォレット未接続時は無効化
     if (newFilter === 'myTasks' && !account?.address) {
       alert('⚠️ Please connect your wallet to use "My Tasks" filter');
-      return; //フィルターの変更をキャンセル
+      return; // フィルター変更をキャンセル
     }
     
     setFilter(newFilter);
